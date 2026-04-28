@@ -53,25 +53,22 @@
 
         <main class="main-content">
             
-           <section id="v-pedidos" class="view-section active">
+            <section id="v-pedidos" class="view-section active">
                 <div class="dashboard-header">
                     <h2>Monitor Live</h2>
                 </div>
-                <div class="bento-grid-pedidos">
-                    
-                    <div class="card-bento">
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    <div class="card-bento" style="flex: 1; min-width: 320px; min-height: 70vh;">
                         <h3 class="card-title">Pendientes</h3>
                         <div id="l-pendientes"></div>
                     </div>
-
-                    <div class="card-bento">
+                    <div class="card-bento" style="flex: 1; min-width: 320px; align-self: flex-start;">
                         <div class="admin-group-header" onclick="toggleAtendidos()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                             <h3 class="card-title" style="color: var(--success); margin: 0;">Atendidos Hoy</h3>
                             <svg id="chevron-atendidos" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s; color: var(--success);"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
                         <div id="l-atendidos" class="lista-atendidos-oculta" style="margin-top: 15px;"></div>
                     </div>
-
                 </div>
             </section>
 
@@ -121,7 +118,7 @@
 
             <section id="v-stats" class="view-section">
                 <div class="dashboard-header">
-                    <h2>Intelligence</h2>
+                    <h2>Estadísticas</h2>
                     <select id="periodo-selector" onchange="actualizarMétricas()">
                         <option value="hoy">Cierre de Hoy</option>
                         <option value="semana">Últimos 7 días</option>
