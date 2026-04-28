@@ -13,6 +13,31 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
+
+/* Ajuste al contenedor padre de Pedidos */
+#v-pedidos > div {
+    align-items: flex-start; /* Evita que las columnas se estiren a la misma altura */
+}
+
+/* Contenedor específico de la lista de pendientes */
+#l-pendientes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 15px;
+    max-height: 65vh; /* Altura máxima fija */
+    overflow-y: auto !important; /* Fuerza el scroll vertical */
+    padding: 10px;
+    background: rgba(0,0,0,0.1); /* Sutil distinción visual */
+    border-radius: 12px;
+}
+
+/* Asegurar que la tarjeta Bento no se desborde */
+.card-bento {
+    height: auto;
+    max-height: 90vh; /* Evita que la tarjeta sea más alta que la pantalla */
+    display: flex;
+    flex-direction: column;
+}
 /* Contenedor de la lista de pedidos */
 /* 1. Tarjeta de pedido: alineación y feedback */
 .pedido-card { 
