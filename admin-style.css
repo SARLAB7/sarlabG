@@ -59,6 +59,8 @@ body {
 /* Sidebar */
 .sidebar { 
     width: 260px; 
+    min-width: 260px; /* Forzamos a que este sea su tamaño mínimo */
+    flex-shrink: 0;   /* Evitamos que flexbox la aplaste */
     background: var(--sidebar); 
     display: flex; 
     flex-direction: column; 
@@ -86,12 +88,20 @@ body {
     transition: 0.3s; 
     color: var(--text-muted); 
     font-weight: 500; 
+    white-space: nowrap; /* Evita que el texto se parta en dos líneas */
 }
 
 .nav-item:hover, .nav-item.active { 
     background: rgba(255, 204, 0, 0.1); 
     color: var(--accent-yellow); 
     border-right: 3px solid var(--accent-yellow); 
+}
+
+.nav-icon { 
+    width: 20px; 
+    height: 20px; 
+    min-width: 20px; /* Evita que el icono se deforme */
+    flex-shrink: 0;
 }
 
 .nav-icon { width: 20px; height: 20px; }
@@ -302,7 +312,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     width: 90%; 
     border: 1px solid var(--border); 
 }
+.big-number { 
+    /* clamp(Mínimo, Ideal, Máximo) - Se ajusta solo! */
+    font-size: clamp(2rem, 3.5vw, 3.5rem); 
+    font-weight: 800; 
+    margin: 10px 0; 
+    line-height: 1; 
+    word-break: break-word; /* Si el número es muy largo, baja de línea sin romper la tarjeta */
+}
 
+.big-number-small { 
+    font-size: clamp(1.5rem, 2.5vw, 2.2rem); 
+    font-weight: 700; 
+    margin: 10px 0; 
+    line-height: 1; 
+    word-break: break-word;
+}
 /* =========================================
    RESPONSIVE
    ========================================= */
