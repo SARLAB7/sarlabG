@@ -111,7 +111,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
+    .bento-grid-stats { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px;
+    }
+    .big-number { font-size: 2.5rem; }
 }
 @media (max-width: 768px) {
     /* AGREGAR ESTA LÍNEA PARA DESBLOQUEAR EL SCROLL EN MÓVIL */
