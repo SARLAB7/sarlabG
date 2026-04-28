@@ -1,3 +1,7 @@
+/* =========================================
+   IKU ADMIN - CSS UNIFICADO Y LIMPIO
+   ========================================= */
+
 :root { 
     --bg-dark: #0f1115; 
     --card-dark: #1c1d21;
@@ -11,307 +15,130 @@
     --border: rgba(255, 255, 255, 0.05);
 }
 
+/* 1. RESET Y ESTRUCTURA GLOBAL */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-/* --- REGRESO AL DISEÑO ORIGINAL (ELIMINAR EL BLOQUE DE SCROLL INTERNO) --- */
 
-/* 1. Asegurar que el cuerpo principal pueda hacer scroll si es necesario */
 body { 
     background: var(--bg-dark); 
     color: var(--text-white); 
-    overflow-x: hidden; /* Evita scroll horizontal */
-    overflow-y: auto; /* Permite scroll vertical en toda la página */
-    height: auto; /* Deja que la altura sea natural */
+    overflow-x: hidden;
+    overflow-y: auto; /* Scroll global de la página */
+    height: auto; 
+    min-height: 100vh;
 }
 
-/* 2. El contenido principal debe crecer */
-/* --- REGRESO AL DISEÑO ORIGINAL (ELIMINAR EL BLOQUE DE SCROLL INTERNO) --- */
+#admin-panel { display: flex; width: 100vw; min-height: 100vh; }
 
-/* 1. Asegurar que el cuerpo principal pueda hacer scroll si es necesario */
-body { 
-    background: var(--bg-dark); 
-    color: var(--text-white); 
-    overflow-x: hidden; /* Evita scroll horizontal */
-    overflow-y: auto; /* Permite scroll vertical en toda la página */
-    height: auto; /* Deja que la altura sea natural */
+/* 2. SIDEBAR */
+.sidebar { 
+    width: 260px; 
+    background: var(--sidebar); 
+    display: flex; 
+    flex-direction: column; 
+    padding: 24px 0; 
+    z-index: 100; 
+    border-right: 1px solid var(--border); 
+    position: sticky;
+    top: 0;
+    height: 100vh;
 }
+.sidebar h2 { color: var(--white); text-align: center; margin-bottom: 40px; letter-spacing: 2px; font-weight: 800; }
+.sidebar h2 span { color: var(--accent-yellow); }
 
-/* 2. El contenido principal debe crecer */
+.nav-item { padding: 14px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; color: var(--text-muted); font-weight: 500; }
+.nav-item:hover, .nav-item.active { background: rgba(255, 204, 0, 0.1); color: var(--accent-yellow); border-right: 3px solid var(--accent-yellow); }
+.nav-icon { width: 20px; height: 20px; }
+
+.admin-sarlab-credit { padding: 20px 24px 0; font-size: 0.75rem; color: var(--text-muted); margin-top: auto; }
+.admin-sarlab-credit strong { color: var(--white); }
+
+/* 3. CONTENIDO PRINCIPAL */
 .main-content { 
     flex: 1; 
     padding: 40px; 
-    overflow: visible; /* Importante: deja que el contenido se desborde */
-    height: auto; 
-}
-
-/* 3. Las tarjetas Bento crecen según su contenido */
-.card-bento { 
-    background: var(--card-dark); 
-    border-radius: 24px; 
-    padding: 24px; 
-    border: 1px solid var(--border); 
-    height: auto; /* Crecen solas */
-    margin-bottom: 24px;
-}
-
-/* 4. La lista de pendientes vuelve a ser una lista simple */
-#l-pendientes {
-    display: flex; /* Vuelve a ser una lista vertical */
-    flex-direction: column;
-    gap: 15px;
-    /* Eliminadas todas las reglas de grid, max-height y scroll */
-}
-
-/* --- REPARAR EL RECORTADO HORRIBLE DE LA TARJETA DEL PEDIDO --- */
-
-/* Asegurarnos que la .pedido-card tenga padding y no se "pegue" a los bordes */
-.pedido-card { 
-    background: var(--sidebar); 
-    padding: 20px; /* Suficiente espacio interno */
-    border-radius: 16px; 
-    margin-bottom: 0; /* Controlado por el gap de #l-pendientes */
-    border: 1px solid var(--border); 
-    border-left: 4px solid var(--border);
-    transition: transform 0.2s ease;
-    width: 100%; /* Ocupa todo el ancho disponible */
-    box-sizing: border-box; /* Incluye padding en el ancho total */
-}
-
-.pedido-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 204, 0, 0.2);
-}
-
-/* 3. Las tarjetas Bento crecen según su contenido */
-.card-bento { 
-    background: var(--card-dark); 
-    border-radius: 24px; 
-    padding: 24px; 
-    border: 1px solid var(--border); 
-    height: auto; /* Crecen solas */
-    margin-bottom: 24px;
-}
-
-/* 4. La lista de pendientes vuelve a ser una lista simple */
-#l-pendientes {
-    display: flex; /* Vuelve a ser una lista vertical */
-    flex-direction: column;
-    gap: 15px;
-    /* Eliminadas todas las reglas de grid, max-height y scroll */
-}
-
-/* --- REPARAR EL RECORTADO HORRIBLE DE LA TARJETA DEL PEDIDO --- */
-
-/* Asegurarnos que la .pedido-card tenga padding y no se "pegue" a los bordes */
-.pedido-card { 
-    background: var(--sidebar); 
-    padding: 20px; /* Suficiente espacio interno */
-    border-radius: 16px; 
-    margin-bottom: 0; /* Controlado por el gap de #l-pendientes */
-    border: 1px solid var(--border); 
-    border-left: 4px solid var(--border);
-    transition: transform 0.2s ease;
-    width: 100%; /* Ocupa todo el ancho disponible */
-    box-sizing: border-box; /* Incluye padding en el ancho total */
-}
-
-.pedido-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 204, 0, 0.2);
-}
-/* Ajuste al contenedor padre de Pedidos */
-#v-pedidos > div {
-    align-items: flex-start; /* Evita que las columnas se estiren a la misma altura */
-}
-
-/* Contenedor específico de la lista de pendientes */
-#l-pendientes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 15px;
-    max-height: 65vh; /* Altura máxima fija */
-    overflow-y: auto !important; /* Fuerza el scroll vertical */
-    padding: 10px;
-    background: rgba(0,0,0,0.1); /* Sutil distinción visual */
-    border-radius: 12px;
-}
-
-/* Asegurar que la tarjeta Bento no se desborde */
-.card-bento {
     height: auto;
-    max-height: 90vh; /* Evita que la tarjeta sea más alta que la pantalla */
+    overflow: visible; 
+}
+
+.view-section { display: none; animation: fadeIn 0.4s ease; }
+.view-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.dashboard-header h2 { font-size: 2rem; font-weight: 700; color: var(--white); }
+
+/* 4. TARJETAS BENTO */
+.card-bento { 
+    background: var(--card-dark); 
+    border-radius: 24px; 
+    padding: 24px; 
+    border: 1px solid var(--border); 
+    height: auto; 
+    margin-bottom: 24px;
+}
+.card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: var(--white); }
+
+/* 5. MONITOR DE PEDIDOS (ELIMINADO EL GRID Y EL SCROLL INTERNO) */
+#l-pendientes, #l-atendidos {
     display: flex;
     flex-direction: column;
+    gap: 15px;
+    width: 100%;
 }
-/* Contenedor de la lista de pedidos */
-/* 1. Tarjeta de pedido: alineación y feedback */
+
 .pedido-card { 
     background: var(--sidebar); 
     padding: 20px; 
     border-radius: 16px; 
-    margin-bottom: 15px; 
     border: 1px solid var(--border);
     border-left: 4px solid var(--border);
-    align-self: start; /* Evita que se estiren en el grid si una es más larga */
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform 0.2s ease;
 }
-
-.pedido-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 204, 0, 0.2);
-}
-
-/* 2. Scrollbar refinado para #l-pendientes */
-#l-pendientes::-webkit-scrollbar {
-    width: 6px;
-}
-
-#l-pendientes::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.05); 
-    border-radius: 10px;
-}
-
-#l-pendientes:hover::-webkit-scrollbar-thumb {
-    background: var(--border); /* Se hace visible solo al pasar el mouse */
-}
-
-/* Ajuste de la tarjeta bento para que no sea tan alta por defecto */
-.card-bento {
-    background: var(--card-dark);
-    border-radius: 24px;
-    padding: 24px;
-    border: 1px solid var(--border);
-    height: fit-content; /* Se ajusta al contenido */
-}
-
-/* Personalizar el scroll para que se vea elegante (estilo dark) */
-#l-pendientes::-webkit-scrollbar {
-    width: 6px;
-}
-#l-pendientes::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 10px;
-}
-/* Login */
-.login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-dark); }
-.login-card { background: var(--card-dark); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.login-card h2 { margin-bottom: 5px; font-weight: 700; color: var(--text-white); }
-.login-card p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem; }
-
-/* Layout Base */
-#admin-panel { display: flex; width: 100vw; height: 100vh; }
-
-/* Sidebar */
-.sidebar { width: 260px; background: var(--sidebar); display: flex; flex-direction: column; padding: 24px 0; z-index: 100; border-right: 1px solid var(--border); }
-.sidebar h2 { color: var(--white); text-align: center; margin-bottom: 40px; letter-spacing: 2px; font-weight: 800; }
-.sidebar h2 span { color: var(--accent-yellow); }
-.nav-item { padding: 14px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; color: var(--text-muted); font-weight: 500; }
-.nav-item:hover, .nav-item.active { background: rgba(255, 204, 0, 0.1); color: var(--accent-yellow); border-right: 3px solid var(--accent-yellow); }
-.nav-icon { width: 20px; height: 20px; }
-.admin-sarlab-credit { padding: 20px 24px 0; font-size: 0.75rem; color: var(--text-muted); }
-.admin-sarlab-credit strong { color: var(--white); }
-
-/* Contenido Principal */
-.main-content { flex: 1; padding: 40px; overflow-y: auto; height: 100vh; }
-.view-section { display: none; animation: fadeIn 0.4s ease; }
-.view-section.active { display: block; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Dashboard Header */
-.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.dashboard-header h2 { font-size: 2rem; font-weight: 700; color: var(--white); }
-
-/* Tarjetas Bento */
-.card-bento { background: var(--card-dark); border-radius: 24px; padding: 24px; border: 1px solid var(--border); }
-.card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: var(--white); }
-
-/* Bento Grid Stats */
-.bento-grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.card-yellow { background: var(--accent-yellow); color: #000; border: none; display: flex; flex-direction: column; }
-.card-danger { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
-.span-2 { grid-column: span 2; }
-
-/* Tipografía Stats */
-.card-label { font-size: 0.85rem; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
-.big-number { font-size: 3.5rem; font-weight: 800; margin: 10px 0; line-height: 1; }
-.big-number-small { font-size: 2.2rem; font-weight: 700; margin: 10px 0; line-height: 1; }
-.card-sub { font-size: 0.85rem; opacity: 0.6; }
-
-.payment-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-.payment-item { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-
-/* Formularios e Inputs */
-input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--sidebar); color: var(--white); font-family: inherit; margin-bottom: 12px; outline: none; transition: 0.3s; }
-input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); }
-
-/* Botones */
-.btn-action { padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; width: 100%; }
-.btn-primary { background: var(--white); color: #000; }
-.btn-yellow { background: var(--accent-yellow); color: #000; }
-.btn-yellow:hover { background: #e6b800; transform: translateY(-2px); }
-.btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
-
-/* Tarjetas de Pedido */
-.pedido-card { background: var(--sidebar); padding: 20px; border-radius: 16px; margin-bottom: 15px; border-left: 4px solid var(--border); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .pedido-card.pendiente { border-left-color: var(--danger); }
 .pedido-card.preparando { border-left-color: var(--accent-yellow); }
-.pedido-card.listo { border-left-color: var(--success); opacity: 0.7; }
+.pedido-card.listo { border-left-color: var(--success); opacity: 0.8; }
+.pedido-card:hover { transform: translateY(-2px); border-color: rgba(255, 204, 0, 0.2); }
 
 .acciones-pedido { margin-top: 15px; display: flex; gap: 8px; flex-direction: column; }
-.btn-estado { padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-preparar { background-color: var(--accent-yellow); color: #000; }
-.grid-pagos { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.btn-pago { padding: 10px 4px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: white; }
-.nequi { background-color: #DA0081; }
-.banco { background-color: #0047BA; }
-.efectivo { background-color: var(--success); }
 
-/* Categorías Carta */
-.categoria-header { background: var(--sidebar); border: 1px solid var(--border); padding: 14px 18px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.categoria-header h4 { margin: 0; color: var(--white); font-weight: 600; text-transform: capitalize; }
-.count-badge { background: rgba(255, 204, 0, 0.1); color: var(--accent-yellow); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; margin-left: 10px; font-weight: 700; }
-.lista-categoria { padding-left: 15px; border-left: 2px solid var(--border); margin-bottom: 20px; margin-top: 10px; }
-.lista-categoria-oculta, .lista-atendidos-oculta { display: none; }
+/* 6. ESTADÍSTICAS */
+.bento-grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.card-yellow { background: var(--accent-yellow); color: #000; border: none; }
+.card-danger { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+.span-2 { grid-column: span 2; }
+.big-number { font-size: 3.5rem; font-weight: 800; margin: 10px 0; }
+.big-number-small { font-size: 2.2rem; font-weight: 700; margin: 10px 0; }
 
-.plato-row { background: var(--sidebar); padding: 16px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+/* 7. FORMULARIOS, BOTONES Y OTROS */
+input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--sidebar); color: var(--white); margin-bottom: 12px; outline: none; }
+.btn-action { padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; width: 100%; }
+.btn-yellow { background: var(--accent-yellow); color: #000; }
+.btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
 
-/* Mesas */
 .mesas-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-.mesa-card { background: var(--sidebar); border: 2px solid var(--border); border-radius: 16px; padding: 24px 16px; text-align: center; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
-.mesa-libre { border-color: rgba(34, 197, 94, 0.3); }
-.mesa-ocupada { border-color: var(--accent-yellow); background: rgba(255, 204, 0, 0.05); cursor: pointer; }
-.mesa-ocupada:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255, 204, 0, 0.1); }
+.mesa-card { background: var(--sidebar); border: 2px solid var(--border); border-radius: 16px; padding: 24px 16px; text-align: center; }
 
-/* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
-.modal-content { background: var(--card-dark); padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border); }
+/* 8. RESPONSIVE Y PRINT */
+@media (max-width: 1024px) { .bento-grid-stats { grid-template-columns: repeat(2, 1fr); } }
 
-/* Responsive */
 @media (max-width: 768px) {
     body { overflow-y: auto; height: auto; }
-    #admin-panel { flex-direction: column; height: auto; }
-    .sidebar { flex-direction: row; width: 100%; padding: 0; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    #admin-panel { flex-direction: column; }
+    .sidebar { 
+        flex-direction: row; width: 100%; height: auto; padding: 0; overflow-x: auto; 
+        position: relative; border-right: none; border-bottom: 1px solid var(--border); 
+    }
     .sidebar h2 { display: none; }
-    .nav-item { flex-direction: column; padding: 12px; font-size: 0.65rem; min-width: 80px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
-    .nav-item.active { border-right: none; border-bottom: 3px solid var(--accent-yellow); }
-    .main-content { padding: 20px; height: auto; overflow: visible; }
+    .nav-item { min-width: 100px; font-size: 0.7rem; justify-content: center; }
+    .main-content { padding: 20px; }
     .bento-grid-stats { grid-template-columns: 1fr; }
     .span-2 { grid-column: span 1; }
-    .admin-sarlab-credit { display: none; }
-} /* Aquí estaba la llave extra corregida */
+}
 
 @media print { 
     body * { visibility: hidden; } 
     #ticket-impresion, #ticket-impresion * { visibility: visible; } 
-    #ticket-impresion { 
-        position: absolute; 
-        left: 0; 
-        top: 0; 
-        width: 100%; 
-        max-width: 80mm; 
-        background: white; 
-        color: black; 
-        padding: 10px; 
-        font-family: monospace; 
-    } 
+    #ticket-impresion { position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } 
 }
