@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARLAB | Menú Interactivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="hero">
+            <div class="hero-inner">
+                <span class="overline">Bienvenidos a</span>
+                <h1>SAR</h1>
+                <p class="brand-sub">RESTAURANTE BAR</p>
+                <div class="info-box">
+                    <p class="location">📍 TU UBICACIÓN </p>
+                    <p class="schedule">SLOGAN SLOGAN </p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="menu-content">
+            <nav class="tabs">
+    <button class="tab-btn active" data-tab="diario">Menú del Día</button>            
+    <button class="tab-btn" data-tab="desayuno">Desayunos</button>
+    <button class="tab-btn" data-tab="especial">Especiales</button>
+    <button class="tab-btn" data-tab="bebida">Bebidas</button>
+</nav>
+
+            <div id="loader" class="loader">Preparando delicias...</div>
+<section id="diario" class="menu-section active"></section>
+ <section id="almuerzo" class="menu-section"></section>
+<section id="desayuno" class="menu-section"></section>
+<section id="especial" class="menu-section"></section>
+<section id="asado" class="menu-section"></section>
+<section id="rapida" class="menu-section"></section>
+<section id="bebida" class="menu-section"></section>
+<footer class="compact-footer">
+    <a href="https://www.instagram.com/VISIONESTUDIO.CO " target="_blank" class="compact-ig-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        Síguenos
+    </a>
+    <div class="sarlab-compact">
+        <p>Desarrollado por <strong>SARLAB</strong> Medellín</p>
+    </div>
+</footer>
+    <div class="cart-fab" onclick="toggleCart()">
+        <span id="cart-count">0</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+    </div>
+
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-header">
+            <h3>Tu Pedido</h3>
+            <button class="close-cart" onclick="toggleCart()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="cart-items-list" id="cart-items"></div>
+        <div class="cart-footer">
+            <div class="total-row"><span>TOTAL:</span><span id="cart-total-price">$0</span></div>
+            <div class="order-form">
+                <select id="tipo-servicio" onchange="ajustarPlaceholder()">
+                    <option value="mesa">🍽️ Mesa (Comer aquí)</option>
+                    <option value="domicilio">🛵 Domicilio</option>
+                </select>
+                <input type="text" id="nombre-cliente" placeholder="Nombre y # de Mesa">
+                <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 12px;">Paga en caja al recibir tu pedido 💵</p>
+                <div class="whatsapp-check">
+                    <input type="checkbox" id="check-whatsapp">
+                    <label for="check-whatsapp">Respaldo por WhatsApp</label>
+                </div>
+            </div>
+            <button class="btn-send-order" onclick="enviarPedido()">CONFIRMAR PEDIDO</button>
+        </div>
+    </div>
+
+    <div id="tracker-modal" class="cart-modal">
+        <div class="cart-header">
+            <h3>Estado de tu Pedido</h3>
+            <button class="close-cart" onclick="cerrarTracker()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div style="padding: 50px 20px; text-align: center;">
+            <div id="tracker-icon" style="font-size: 4rem; margin-bottom: 20px;">📥</div>
+            <h2 id="tracker-status" style="font-size: 2rem; margin-bottom: 10px;">Recibido</h2>
+            <p id="tracker-desc" style="color: #64748b;">Tu pedido ha sido enviado a la cocina.</p>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+    <script>
+        function ajustarPlaceholder() {
+            const tipo = document.getElementById('tipo-servicio').value;
+            const input = document.getElementById('nombre-cliente');
+            input.placeholder = (tipo === 'mesa') ? "Nombre y # de Mesa" : "Nombre y Dirección exacta";
+        }
+    </script>
+</body>
+</html>
