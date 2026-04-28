@@ -14,13 +14,35 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
 /* Contenedor de la lista de pedidos */
-#l-pendientes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Los pone en columnas si hay espacio */
-    gap: 15px;
-    max-height: 70vh; /* No deja que crezca más del 70% de la pantalla */
-    overflow-y: auto; /* Scroll solo dentro del cuadro */
-    padding-right: 10px;
+/* 1. Tarjeta de pedido: alineación y feedback */
+.pedido-card { 
+    background: var(--sidebar); 
+    padding: 20px; 
+    border-radius: 16px; 
+    margin-bottom: 15px; 
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border);
+    align-self: start; /* Evita que se estiren en el grid si una es más larga */
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.pedido-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 204, 0, 0.2);
+}
+
+/* 2. Scrollbar refinado para #l-pendientes */
+#l-pendientes::-webkit-scrollbar {
+    width: 6px;
+}
+
+#l-pendientes::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.05); 
+    border-radius: 10px;
+}
+
+#l-pendientes:hover::-webkit-scrollbar-thumb {
+    background: var(--border); /* Se hace visible solo al pasar el mouse */
 }
 
 /* Ajuste de la tarjeta bento para que no sea tan alta por defecto */
