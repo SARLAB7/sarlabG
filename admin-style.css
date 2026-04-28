@@ -178,17 +178,30 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     #ticket-impresion, #ticket-impresion * { visibility: visible; } 
     #ticket-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } 
 }
-/* Reemplaza ".tu-clase-blanca" por el nombre real de la clase de esas tarjetas */
-.tu-clase-blanca {
-    background-color: #ffffff; 
-    color: #0f1115 !important; /* Fuerza a que la letra principal sea oscura */
+
+/* =========================================
+   FIX: LETRAS OSCURAS PARA TARJETAS BLANCAS
+   ========================================= */
+
+/* 1. Fuerza el texto oscuro en las tarjetas principales de estadísticas */
+.admin-panel-card,
+.stat-card {
+    background-color: #ffffff !important;
+    color: #0f1115 !important;
 }
 
-/* Blindaje para que los títulos, números y spans internos no se queden blancos */
-.tu-clase-blanca h2, 
-.tu-clase-blanca h3, 
-.tu-clase-blanca p, 
-.tu-clase-blanca span, 
-.tu-clase-blanca div {
+/* 2. Asegura que los títulos, números y textos internos no hereden el blanco global */
+.admin-panel-card h4, 
+.admin-panel-card span, 
+.admin-panel-card strong, 
+.admin-panel-card p, 
+.admin-panel-card div,
+.stat-card div,
+.stat-card strong {
+    color: #0f1115 !important;
+}
+
+/* 3. Arregla el texto del selector de "Cierre de Hoy", "Últimos 7 días", etc. */
+#periodo-selector {
     color: #0f1115 !important;
 }
