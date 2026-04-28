@@ -1,4 +1,4 @@
-:root {
+:root { 
     --primary: #0f1115;
     --accent: #ffcc00;
     --white: #ffffff;
@@ -84,7 +84,33 @@ body { font-family: var(--font-sans); background-color: var(--primary); color: v
 .total-row { display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; color: var(--white); }
 #cart-total-price { color: var(--success); }
 
-.order-form input, .order-form select { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 10px; margin-bottom: 12px; font-family: inherit; background: #1f222a; color: var(--white); }
+/* Corrección para visibilidad de texto en el carrito */
+.order-form input, 
+.order-form select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-family: inherit;
+    /* Forzamos el fondo oscuro y letra blanca */
+    background-color: #1f222a !important; 
+    color: #ffffff !important;
+}
+
+/* Estilo para el texto sugerido (placeholder) */
+.order-form input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Evita que el navegador cambie el color al autocompletar */
+.order-form input:-webkit-autofill,
+.order-form input:-webkit-autofill:hover, 
+.order-form input:-webkit-autofill:focus {
+    -webkit-text-fill-color: white;
+    -webkit-box-shadow: 0 0 0px 1000px #1f222a inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
 .btn-send-order { width: 100%; background: var(--accent); color: var(--primary); padding: 16px; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px; }
 .btn-send-order:active { transform: scale(0.98); }
 
