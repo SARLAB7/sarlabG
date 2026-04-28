@@ -12,13 +12,8 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { 
-    background: var(--bg-dark); 
-    color: var(--text-white); 
-    overflow: hidden; 
-    height: 100vh; 
-    color-scheme: dark; /* ✅ Fuerza a que el navegador use scrollbars y selects oscuros */
-}
+body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; color-scheme: dark; }
+
 /* Login */
 .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-dark); }
 .login-card { background: var(--card-dark); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -28,10 +23,10 @@ body {
 /* Layout Base */
 #admin-panel { display: flex; width: 100vw; height: 100vh; }
 
-/* Sidebar */
+/* Sidebar (Arreglado para computadora) */
 .sidebar { 
     width: 260px; 
-    flex-shrink: 0; /* Esto evita que se aplaste en PC */
+    flex-shrink: 0; /* Evita que el menú se aplaste */
     background: var(--sidebar); 
     display: flex; 
     flex-direction: column; 
@@ -47,10 +42,10 @@ body {
 .admin-sarlab-credit { padding: 20px 24px 0; font-size: 0.75rem; color: var(--text-muted); }
 .admin-sarlab-credit strong { color: var(--white); }
 
-/* Contenido Principal */
+/* Contenido Principal (Arreglado para computadora) */
 .main-content { 
     flex: 1; 
-    min-width: 0; /* Esto estabiliza las columnas en PC */
+    min-width: 0; /* Estabiliza el ancho de las tarjetas */
     padding: 40px; 
     overflow-y: auto; 
     height: 100vh; 
@@ -129,38 +124,26 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background: var(--card-dark); padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border); }
 
-/* Responsive */
+/* Responsive (Dispositivos Móviles) */
 @media (max-width: 1024px) {
-    .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
+    .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
-    /* AGREGAR ESTA LÍNEA PARA DESBLOQUEAR EL SCROLL EN MÓVIL */
-    body { overflow-y: auto; height: auto; }
-
-    #admin-panel { flex-direction: column; height: auto; }
-.sidebar { 
-    width: 260px; 
-    flex-shrink: 0; /* ✅ Agrega esto para evitar que se aplaste */
-    background: var(--sidebar); 
-    display: flex; 
-    flex-direction: column; 
-    padding: 24px 0; 
-    z-index: 100; 
-    border-right: 1px solid var(--border); 
-}    .sidebar h2 { display: none; }
-    .nav-item { flex-direction: column; padding: 12px; font-size: 0.65rem; min-width: 80px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
-    .nav-item.active { border-right: none; border-bottom: 3px solid var(--accent-yellow); }
-.main-content { 
-    flex: 1; 
-    min-width: 0; /* ✅ Agrega esto para estabilizar el grid */
-    padding: 40px; 
-    overflow-y: auto; 
-    height: 100vh; 
-}    .bento-grid-stats { grid-template-columns: 1fr; }
-    .span-2 { grid-column: span 1; }
-    .admin-sarlab-credit { display: none; }
+    body { overflow-y: auto; height: auto; }
+    #admin-panel { flex-direction: column; height: auto; }
+    
+    /* El sidebar vuelve a ser responsivo aquí */
+    .sidebar { flex-direction: row; width: 100%; padding: 0; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar h2 { display: none; }
+    .nav-item { flex-direction: column; padding: 12px; font-size: 0.65rem; min-width: 80px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
+    .nav-item.active { border-right: none; border-bottom: 3px solid var(--accent-yellow); }
+    
+    /* El contenido principal vuelve a ser normal en móviles */
+    .main-content { padding: 20px; height: auto; overflow: visible; }
+    
+    .bento-grid-stats { grid-template-columns: 1fr; }
+    .span-2 { grid-column: span 1; }
+    .admin-sarlab-credit { display: none; }
 }
 
-
 @media print { body * { visibility: hidden; } #ticket-impresion, #ticket-impresion * { visibility: visible; } #ticket-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } }
-
