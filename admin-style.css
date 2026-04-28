@@ -12,8 +12,112 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
+/* --- REGRESO AL DISEÑO ORIGINAL (ELIMINAR EL BLOQUE DE SCROLL INTERNO) --- */
 
+/* 1. Asegurar que el cuerpo principal pueda hacer scroll si es necesario */
+body { 
+    background: var(--bg-dark); 
+    color: var(--text-white); 
+    overflow-x: hidden; /* Evita scroll horizontal */
+    overflow-y: auto; /* Permite scroll vertical en toda la página */
+    height: auto; /* Deja que la altura sea natural */
+}
+
+/* 2. El contenido principal debe crecer */
+/* --- REGRESO AL DISEÑO ORIGINAL (ELIMINAR EL BLOQUE DE SCROLL INTERNO) --- */
+
+/* 1. Asegurar que el cuerpo principal pueda hacer scroll si es necesario */
+body { 
+    background: var(--bg-dark); 
+    color: var(--text-white); 
+    overflow-x: hidden; /* Evita scroll horizontal */
+    overflow-y: auto; /* Permite scroll vertical en toda la página */
+    height: auto; /* Deja que la altura sea natural */
+}
+
+/* 2. El contenido principal debe crecer */
+.main-content { 
+    flex: 1; 
+    padding: 40px; 
+    overflow: visible; /* Importante: deja que el contenido se desborde */
+    height: auto; 
+}
+
+/* 3. Las tarjetas Bento crecen según su contenido */
+.card-bento { 
+    background: var(--card-dark); 
+    border-radius: 24px; 
+    padding: 24px; 
+    border: 1px solid var(--border); 
+    height: auto; /* Crecen solas */
+    margin-bottom: 24px;
+}
+
+/* 4. La lista de pendientes vuelve a ser una lista simple */
+#l-pendientes {
+    display: flex; /* Vuelve a ser una lista vertical */
+    flex-direction: column;
+    gap: 15px;
+    /* Eliminadas todas las reglas de grid, max-height y scroll */
+}
+
+/* --- REPARAR EL RECORTADO HORRIBLE DE LA TARJETA DEL PEDIDO --- */
+
+/* Asegurarnos que la .pedido-card tenga padding y no se "pegue" a los bordes */
+.pedido-card { 
+    background: var(--sidebar); 
+    padding: 20px; /* Suficiente espacio interno */
+    border-radius: 16px; 
+    margin-bottom: 0; /* Controlado por el gap de #l-pendientes */
+    border: 1px solid var(--border); 
+    border-left: 4px solid var(--border);
+    transition: transform 0.2s ease;
+    width: 100%; /* Ocupa todo el ancho disponible */
+    box-sizing: border-box; /* Incluye padding en el ancho total */
+}
+
+.pedido-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 204, 0, 0.2);
+}
+
+/* 3. Las tarjetas Bento crecen según su contenido */
+.card-bento { 
+    background: var(--card-dark); 
+    border-radius: 24px; 
+    padding: 24px; 
+    border: 1px solid var(--border); 
+    height: auto; /* Crecen solas */
+    margin-bottom: 24px;
+}
+
+/* 4. La lista de pendientes vuelve a ser una lista simple */
+#l-pendientes {
+    display: flex; /* Vuelve a ser una lista vertical */
+    flex-direction: column;
+    gap: 15px;
+    /* Eliminadas todas las reglas de grid, max-height y scroll */
+}
+
+/* --- REPARAR EL RECORTADO HORRIBLE DE LA TARJETA DEL PEDIDO --- */
+
+/* Asegurarnos que la .pedido-card tenga padding y no se "pegue" a los bordes */
+.pedido-card { 
+    background: var(--sidebar); 
+    padding: 20px; /* Suficiente espacio interno */
+    border-radius: 16px; 
+    margin-bottom: 0; /* Controlado por el gap de #l-pendientes */
+    border: 1px solid var(--border); 
+    border-left: 4px solid var(--border);
+    transition: transform 0.2s ease;
+    width: 100%; /* Ocupa todo el ancho disponible */
+    box-sizing: border-box; /* Incluye padding en el ancho total */
+}
+
+.pedido-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 204, 0, 0.2);
+}
 /* Ajuste al contenedor padre de Pedidos */
 #v-pedidos > div {
     align-items: flex-start; /* Evita que las columnas se estiren a la misma altura */
