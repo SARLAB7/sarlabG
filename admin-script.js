@@ -289,3 +289,4 @@ window.imprimirComanda = (ps) => {
     document.body.appendChild(div); window.print(); document.body.removeChild(div);
 };
 
+
