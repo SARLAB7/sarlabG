@@ -180,20 +180,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 }
 
 /* =========================================
-   FIX: ESTÉTICA OSCURA UNIFORME PARA MÉTRICAS
+   FIX: ESTÉTICA OSCURA UNIFORME Y ESPACIADA
    ========================================= */
 
-/* 1. Forzamos las tarjetas al modo oscuro (ignorando el blanco del HTML) */
+/* 1. Tarjetas principales: Fondo oscuro, BORDES y PADDING para que respiren */
 .admin-panel-card,
 .stat-card {
     background-color: var(--card-dark) !important;
     border: 1px solid var(--border) !important;
-    color: var(--white) !important;
     border-radius: 16px !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    padding: 24px !important; /* <- Esto soluciona lo apilonado */
+    color: var(--white) !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-/* 2. Ajustamos los textos para que se vean perfectos sobre el fondo oscuro */
+/* 2. Textos de las tarjetas */
 .admin-panel-card h4, 
 .admin-panel-card span, 
 .admin-panel-card p, 
@@ -206,7 +210,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     color: var(--white) !important;
 }
 
-/* 3. Magia: Hacemos que la PRIMERA tarjeta (Ventas de Hoy) sea AMARILLA para destacar */
+/* 3. Forzar al modo oscuro las sub-tarjetas generadas por el JavaScript (Los cuadros blancos internos) */
+#rankings-rechazados div,
+#rankings-categoria div {
+    background-color: #16181d !important; /* Fondo oscuro para los recuadros internos */
+    color: var(--white) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Ajusta los textos dentro de esas cajas rebeldes */
+#rankings-rechazados div p,
+#rankings-rechazados div span,
+#rankings-categoria div span {
+    color: var(--text-muted) !important;
+}
+
+/* 4. Magia: La PRIMERA tarjeta (Ventas de Hoy) se vuelve AMARILLA para destacar */
 .stat-card:nth-child(1) {
     background-color: var(--accent-yellow) !important;
     border: none !important;
@@ -218,7 +237,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     color: #0f1115 !important;
 }
 
-/* 4. Selector de periodo (El desplegable) adaptado al modo oscuro */
+/* 5. Selector de periodo (El desplegable) adaptado al modo oscuro */
 #periodo-selector {
     background-color: var(--sidebar) !important;
     color: var(--white) !important;
