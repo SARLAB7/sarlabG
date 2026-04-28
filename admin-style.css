@@ -180,28 +180,47 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 }
 
 /* =========================================
-   FIX: LETRAS OSCURAS PARA TARJETAS BLANCAS
+   FIX: ESTÉTICA OSCURA UNIFORME PARA MÉTRICAS
    ========================================= */
 
-/* 1. Fuerza el texto oscuro en las tarjetas principales de estadísticas */
+/* 1. Forzamos las tarjetas al modo oscuro (ignorando el blanco del HTML) */
 .admin-panel-card,
 .stat-card {
-    background-color: #ffffff !important;
-    color: #0f1115 !important;
+    background-color: var(--card-dark) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--white) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
 }
 
-/* 2. Asegura que los títulos, números y textos internos no hereden el blanco global */
+/* 2. Ajustamos los textos para que se vean perfectos sobre el fondo oscuro */
 .admin-panel-card h4, 
 .admin-panel-card span, 
-.admin-panel-card strong, 
 .admin-panel-card p, 
-.admin-panel-card div,
-.stat-card div,
+.stat-card div {
+    color: var(--text-muted) !important;
+}
+
+.admin-panel-card strong, 
 .stat-card strong {
+    color: var(--white) !important;
+}
+
+/* 3. Magia: Hacemos que la PRIMERA tarjeta (Ventas de Hoy) sea AMARILLA para destacar */
+.stat-card:nth-child(1) {
+    background-color: var(--accent-yellow) !important;
+    border: none !important;
+}
+
+/* Textos oscuros solo para la tarjeta amarilla */
+.stat-card:nth-child(1) div,
+.stat-card:nth-child(1) strong {
     color: #0f1115 !important;
 }
 
-/* 3. Arregla el texto del selector de "Cierre de Hoy", "Últimos 7 días", etc. */
+/* 4. Selector de periodo (El desplegable) adaptado al modo oscuro */
 #periodo-selector {
-    color: #0f1115 !important;
+    background-color: var(--sidebar) !important;
+    color: var(--white) !important;
+    border: 1px solid var(--border) !important;
 }
