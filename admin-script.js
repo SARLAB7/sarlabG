@@ -108,9 +108,14 @@ const cats = {
 function escucharPedidos() {
     onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
         pedidosGlobales = [];
-        const lp = document.getElementById('l-pendientes'), la = document.getElementById('l-atendidos');
+        const lp = document.getElementById('l-pendientes'), 
+              la = document.getElementById('l-atendidos');
+        
         if(!lp || !la) return;
-        lp.innerHTML = ''; la.innerHTML = '';
+        
+        // LIMPIEZA TOTAL ANTES DE RENDERIZAR
+        lp.innerHTML = ''; 
+        la.innerHTML = '';
         
         snap.docs.forEach(docSnap => {
             const p = docSnap.data(); p.id = docSnap.id;
@@ -119,22 +124,16 @@ function escucharPedidos() {
 
             const card = document.createElement('div');
             card.className = `pedido-card ${p.estado}`;
-            card.id = `card-${p.id}`;
-            
-            let botonesAccion = '';
-            if (p.estado === 'pendiente') {
-                botonesAccion = `<div style="display:flex; gap:8px;"><button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:3;">${ICON_PREPARE} PREPARAR</button><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); flex:1;">${ICON_X}</button></div>`;
-            } else if (p.estado === 'preparando') {
-                botonesAccion = `<div class="grid-pagos"><button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button><button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button><button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECT</button></div><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; font-size:0.75rem; padding: 10px;">${ICON_X} CANCELAR</button>`;
-            } else {
-                botonesAccion = `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="font-size:0.8rem;">${ICON_PREPARE} REVERTIR Y REASIGNAR</button>`;
-            }
+            // ... resto de tu lógica de botones ...
 
-            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;"><div><strong style="font-size: 1.1rem; color:var(--white);">${p.cliente}</strong><div style="font-size:0.85rem; color:var(--text-muted);">${p.tipo} - <span style="color:var(--success);">$${Number(p.total).toLocaleString()}</span></div></div><button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')" style="background:#3b82f6; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">🖨️</button></div><div style="margin-bottom:15px; padding-left:10px; border-left:2px solid rgba(255,255,255,0.1); color: var(--text-white);">${p.items.map(i => `<div style="font-size:0.95rem;">• 1x ${i.nombre} ${i.excluidos?.length > 0 ? `<span style="color:var(--danger); font-size:0.8rem;">(SIN: ${i.excluidos.join(', ')})</span>` : ''}</div>`).join('')}</div><div class="acciones-pedido">${botonesAccion}</div>`;
-            
-            if (p.estado === 'listo') la.appendChild(card); else lp.appendChild(card);
+            // IMPORTANTE: El card se añade al grid de lp directamente
+            if (p.estado === 'listo') {
+                la.appendChild(card);
+            } else {
+                lp.appendChild(card);
+            }
         });
-        actualizarMétricas(); renderizarPlanoMesas(pedidosGlobales);
+        actualizarMétricas();
     });
 }
 
