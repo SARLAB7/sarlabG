@@ -42,9 +42,10 @@ function escucharCarta() {
         const list = document.getElementById('inv-list'); 
         if (!list) return;
 
-        const cats = { 
+       // Dentro de escucharCarta() en admin-script.js
+const cats = { 
     diario: { titulo: "Menú del Día", platos: [] }, 
-    almuerzo: { titulo: "Almuerzos", platos: [] }, // <-- ESTA ES LA QUE FALTA
+    almuerzo: { titulo: "Almuerzos", platos: [] }, 
     desayuno: { titulo: "Desayunos", platos: [] }, 
     especial: { titulo: "Especiales", platos: [] }, 
     asado: { titulo: "Asados", platos: [] }, 
