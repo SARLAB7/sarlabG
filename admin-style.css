@@ -36,7 +36,17 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
 }
 .sidebar h2 { color: var(--white); text-align: center; margin-bottom: 40px; letter-spacing: 2px; font-weight: 800; }
 .sidebar h2 span { color: var(--accent-yellow); }
-.nav-item { padding: 14px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; color: var(--text-muted); font-weight: 500; }
+.nav-item {
+    padding: 14px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 16px; /* Más espacio entre icono y texto */
+    transition: 0.3s;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap; /* Evita que el texto salte de línea */
+}
 .nav-item:hover, .nav-item.active { background: rgba(255, 204, 0, 0.1); color: var(--accent-yellow); border-right: 3px solid var(--accent-yellow); }
 .nav-icon { width: 20px; height: 20px; }
 .admin-sarlab-credit { padding: 20px 24px 0; font-size: 0.75rem; color: var(--text-muted); }
@@ -153,3 +163,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 }
 
 @media print { body * { visibility: hidden; } #ticket-impresion, #ticket-impresion * { visibility: visible; } #ticket-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } }
+/* Busca donde tengas este estilo (línea ~123 de tu HTML o CSS) */
+/* Asegúrate de que el contenedor de las listas tenga esto: */
+.monitor-container { 
+    display: flex; 
+    gap: 24px; 
+    flex-wrap: wrap; /* Esto hace que si no caben, uno baje al otro */
+    align-items: flex-start;
+}
+
+.card-bento {
+    background: var(--card-dark);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    flex: 1; /* Esto hace que crezcan equitativamente */
+    min-width: 300px; /* Pero que no se vuelvan ridículamente pequeñas */
+}
