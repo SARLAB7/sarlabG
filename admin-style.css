@@ -13,7 +13,33 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
+/* Contenedor de la lista de pedidos */
+#l-pendientes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Los pone en columnas si hay espacio */
+    gap: 15px;
+    max-height: 70vh; /* No deja que crezca más del 70% de la pantalla */
+    overflow-y: auto; /* Scroll solo dentro del cuadro */
+    padding-right: 10px;
+}
 
+/* Ajuste de la tarjeta bento para que no sea tan alta por defecto */
+.card-bento {
+    background: var(--card-dark);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    height: fit-content; /* Se ajusta al contenido */
+}
+
+/* Personalizar el scroll para que se vea elegante (estilo dark) */
+#l-pendientes::-webkit-scrollbar {
+    width: 6px;
+}
+#l-pendientes::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
 /* Login */
 .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-dark); }
 .login-card { background: var(--card-dark); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -110,17 +136,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 .modal-content { background: var(--card-dark); padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border); }
 
 /* Responsive */
-@media (max-width: 1024px) {
-    .bento-grid-stats { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 15px;
-    }
-    .big-number { font-size: 2.5rem; }
-}
 @media (max-width: 768px) {
-    /* AGREGAR ESTA LÍNEA PARA DESBLOQUEAR EL SCROLL EN MÓVIL */
     body { overflow-y: auto; height: auto; }
-
     #admin-panel { flex-direction: column; height: auto; }
     .sidebar { flex-direction: row; width: 100%; padding: 0; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
     .sidebar h2 { display: none; }
@@ -130,7 +147,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     .bento-grid-stats { grid-template-columns: 1fr; }
     .span-2 { grid-column: span 1; }
     .admin-sarlab-credit { display: none; }
-}
-}
+} /* Aquí estaba la llave extra corregida */
 
-@media print { body * { visibility: hidden; } #ticket-impresion, #ticket-impresion * { visibility: visible; } #ticket-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } }
+@media print { 
+    body * { visibility: hidden; } 
+    #ticket-impresion, #ticket-impresion * { visibility: visible; } 
+    #ticket-impresion { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        max-width: 80mm; 
+        background: white; 
+        color: black; 
+        padding: 10px; 
+        font-family: monospace; 
+    } 
+}
