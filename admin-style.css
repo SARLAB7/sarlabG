@@ -1,14 +1,14 @@
-:root { 
-    --bg-dark: #0f1115; 
-    --card-dark: #1c1d21;
-    --sidebar: #16181d;
-    --accent-yellow: #ffcc00; 
-    --white: #ffffff; 
-    --success: #22c55e; 
-    --danger: #ef4444; 
-    --text-white: #f8fafc;
-    --text-muted: #94a3b8; 
-    --border: rgba(255, 255, 255, 0.05);
+:root { 
+    --bg-dark: #0f1115; 
+    --card-dark: #1c1d21;
+    --sidebar: #16181d;
+    --accent-yellow: #ffcc00; 
+    --white: #ffffff; 
+    --success: #22c55e; 
+    --danger: #ef4444; 
+    --text-white: #f8fafc;
+    --text-muted: #94a3b8; 
+    --border: rgba(255, 255, 255, 0.05);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -111,24 +111,23 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
+    .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
-    /* AGREGAR ESTA LÍNEA PARA DESBLOQUEAR EL SCROLL EN MÓVIL */
-    body { overflow-y: auto; height: auto; }
+    /* AGREGAR ESTA LÍNEA PARA DESBLOQUEAR EL SCROLL EN MÓVIL */
+    body { overflow-y: auto; height: auto; }
 
-    #admin-panel { flex-direction: column; height: auto; }
-    .sidebar { flex-direction: row; width: 100%; padding: 0; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
-    .sidebar h2 { display: none; }
-    .nav-item { flex-direction: column; padding: 12px; font-size: 0.65rem; min-width: 80px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
-    .nav-item.active { border-right: none; border-bottom: 3px solid var(--accent-yellow); }
-    .main-content { padding: 20px; height: auto; overflow: visible; }
-    .bento-grid-stats { grid-template-columns: 1fr; }
-    .span-2 { grid-column: span 1; }
-    .admin-sarlab-credit { display: none; }
+    #admin-panel { flex-direction: column; height: auto; }
+    .sidebar { flex-direction: row; width: 100%; padding: 0; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .sidebar h2 { display: none; }
+    .nav-item { flex-direction: column; padding: 12px; font-size: 0.65rem; min-width: 80px; text-align: center; border-right: none; border-bottom: 3px solid transparent; }
+    .nav-item.active { border-right: none; border-bottom: 3px solid var(--accent-yellow); }
+    .main-content { padding: 20px; height: auto; overflow: visible; }
+    .bento-grid-stats { grid-template-columns: 1fr; }
+    .span-2 { grid-column: span 1; }
+    .admin-sarlab-credit { display: none; }
 }
 }
 
 @media print { body * { visibility: hidden; } #ticket-impresion, #ticket-impresion * { visibility: visible; } #ticket-impresion { position: absolute; left: 0; top: 0; width: 100%; max-width: 80mm; background: white; color: black; padding: 10px; font-family: monospace; } }
-
 
