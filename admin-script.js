@@ -288,3 +288,66 @@ window.imprimirComanda = (ps) => {
     div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p><hr><ul style="list-style:none; padding:0;">${p.items.map(i => `<li><strong style="font-size:1.1rem;">1x ${i.nombre}</strong> ${i.excluidos?.length > 0 ? `<br><small style="color:red; font-weight:bold;">- Sin: ${i.excluidos.join(', ')}</small>` : ''}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`;
     document.body.appendChild(div); window.print(); document.body.removeChild(div);
 };
+/* --- MONITOR LIVE ELÁSTICO --- */
+.bento-grid-pedidos {
+    display: grid;
+    /* Crea dos columnas si hay espacio, o una sola en móvil */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    /* CRÍTICO: Alinea las tarjetas al inicio para que no se estiren al fondo */
+    align-items: start; 
+}
+
+/* Redefinimos la tarjeta Bento para que crezca con el contenido */
+.card-bento {
+    background: var(--card-dark);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    height: auto; /* Altura automática */
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- MEJORAS VISUALES PARA LOS PEDIDOS --- */
+.pedido-card {
+    background: var(--sidebar);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease;
+}
+
+.pedido-card:hover {
+    transform: scale(1.02);
+}
+
+/* --- DASHBOARD DE MÉTRICAS --- */
+.bento-grid-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+/* En tablets bajamos a 2 columnas */
+@media (max-width: 1024px) {
+    .bento-grid-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* En móviles a 1 sola columna y habilitamos scroll */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+    .main-content {
+        height: auto;
+        overflow: visible;
+    }
+    .bento-grid-stats, .bento-grid-pedidos {
+        grid-template-columns: 1fr;
+    }
+}
