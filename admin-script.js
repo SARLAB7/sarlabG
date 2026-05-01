@@ -98,11 +98,13 @@ function renderPedidosUI() {
 // --- FUNCIONES DE ESTADO (PROTEGIDAS) ---
 window.actualizarEstado = async (id, estado) => {
     try {
-        if (estado === 'preparando') await procesarDescuentoStock(id);
         await updateDoc(doc(db, "pedidos", id), { estado });
+        if (estado === 'preparando') {
+            procesarDescuentoStock(id); // Importante: sin el "await"
+        }
     } catch (error) {
         console.error("Error al actualizar estado:", error);
-        alert("Atención: Hubo un error al procesar la receta. Es posible que un insumo haya sido eliminado del inventario.");
+        alert("Error de conexión al mover el pedido.");
     }
 };
 
@@ -312,11 +314,14 @@ async function procesarDescuentoStock(pedidoId) {
     for (const item of pedido.items) {
         const platoData = menuGlobal[item.nombre];
         if (platoData && platoData.receta) {
-            const promesas = Object.entries(platoData.receta).map(async ([insumoId, cantidad]) => {
-                await updateDoc(doc(db, "inventario", insumoId), { stockActual: increment(-cantidad) });
-                await addDoc(collection(db, "kardex"), { insumoId: insumoId, tipo: 'salida', concepto: `Venta: ${item.nombre}`, cantidad: cantidad, timestamp: serverTimestamp() });
-            });
-            await Promise.all(promesas);
+            for (const [insumoId, cantidad] of Object.entries(platoData.receta)) {
+                try {
+                    await updateDoc(doc(db, "inventario", insumoId), { stockActual: increment(-Number(cantidad)) });
+                    await addDoc(collection(db, "kardex"), { insumoId: insumoId, tipo: 'salida', concepto: `Venta: ${item.nombre}`, cantidad: Number(cantidad), timestamp: serverTimestamp() });
+                } catch (error) {
+                    console.error(`Error descontando insumo ${insumoId} del plato ${item.nombre}:`, error);
+                }
+            }
         }
     }
 }
