@@ -77,11 +77,11 @@
                                 </select>
                                 <textarea id="desc" placeholder="Descripción"></textarea>
                                 <div id="seccion-receta" style="border-top: 1px solid var(--border); padding-top: 15px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:10px;">
-        <label style="font-size:0.7rem;">RECETA</label>
-        <button type="button" onclick="agregarFilaReceta()" class="btn-action" style="padding: 2px 8px; font-size:0.7rem;">+ Insumo</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <label style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); letter-spacing: 1px;">RECETA</label>
+        <button type="button" onclick="agregarFilaReceta()" class="btn-action" style="width: max-content; padding: 4px 12px; font-size: 0.75rem; background: var(--accent-yellow, #fbbf24); color: #000; font-weight: bold; margin: 0;">+ Insumo</button>
     </div>
-    <div id="receta-items"></div>
+    <div id="receta-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
 </div>
                                 <button type="submit" class="btn-action btn-primary">Guardar Plato</button>
                             </form>
