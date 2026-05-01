@@ -136,7 +136,7 @@
                     <h2>Control de Bodega Avanzado</h2>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="abrirModalCompra()" class="btn-action btn-primary">+ Registrar Compra</button>
-                        <button onclick="generarBalanceDiarioInventario()" class="btn-action btn-outline" style="color: var(--accent-yellow); border-color: var(--accent-yellow);">📊 Cuadre de Inventario Hoy</button>
+                        <button onclick="abrirSeccionBalance()" class="btn-action btn-outline" style="color: var(--accent-yellow); border-color: var(--accent-yellow);">📊 Cuadre de Inventario Hoy</button>
                         <button onclick="abrirModalMerma()" class="btn-action btn-outline" style="color:#ef4444; border-color:#ef4444;">⚠️ Registrar Merma</button>
                     </div>
                 </div>
@@ -219,7 +219,36 @@
             </section>
         </main>
     </div>
-
+<!-- NUEVA SECCIÓN: BALANCE DIARIO INDEPENDIENTE -->
+            <section id="v-balance" class="view-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <!-- Este botón nos devuelve al inventario normal -->
+                        <button onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\\'v-inventario\\']'))" class="btn-action btn-outline" style="color: var(--text-muted); border-color: var(--border);">← Volver</button>
+                        <h2 style="margin: 0; color: var(--accent-yellow);">📊 Cuadre de Inventario (Hoy)</h2>
+                    </div>
+                    <!-- Botón mágico para descargar a Excel -->
+                    <button onclick="descargarBalanceCSV()" class="btn-action btn-primary" style="background: #10b981; color: white; border: none;">📥 Descargar Excel</button>
+                </div>
+                
+                <div style="background: var(--card-dark); padding: 24px; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted);">
+                                    <th style="padding: 12px; font-weight: 600;">Insumo</th>
+                                    <th style="padding: 12px; font-weight: 600; text-align: center; color: #22c55e;">+ Entró Hoy</th>
+                                    <th style="padding: 12px; font-weight: 600; text-align: center; color: #ef4444;">- Salió Hoy</th>
+                                    <th style="padding: 12px; font-weight: 600; text-align: right; color: var(--white);">= Quedó en Bodega</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-balance-seccion">
+                                <!-- Aquí se inyectan los datos -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
   <!-- MODALES DE ACCIÓN -->
     <div id="modal-compra" onclick="if(event.target === this) cerrarModales()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
         <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:400px; color:var(--white); position: relative;">
@@ -278,33 +307,8 @@
             </div>
         </div>
     </div>
-<!-- MODAL BALANCE DIARIO DE INVENTARIO -->
-    <div id="modal-balance" onclick="if(event.target === this) cerrarModales()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
-        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:650px; max-width:95%; color:var(--white); position: relative; max-height: 85vh; display: flex; flex-direction: column;">
-            <button type="button" onclick="cerrarModales()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
-            <h3 style="margin-bottom: 20px; color: var(--accent-yellow);">📊 Cuadre de Inventario (Hoy)</h3>
-            
-            <div style="overflow-y: auto; flex: 1; padding-right: 5px;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted);">
-                            <th style="padding: 12px; font-weight: 600;">Insumo</th>
-                            <th style="padding: 12px; font-weight: 600; text-align: center; color: #22c55e;">+ Entró</th>
-                            <th style="padding: 12px; font-weight: 600; text-align: center; color: #ef4444;">- Salió</th>
-                            <th style="padding: 12px; font-weight: 600; text-align: right; color: var(--white);">= Quedó</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-balance-body">
-                        <!-- Los datos se inyectarán aquí mágicamente -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div style="margin-top: 20px; text-align: right;">
-                <button type="button" onclick="cerrarModales()" class="btn-action btn-outline" style="color: var(--white); border-color: var(--border);">Cerrar Panel</button>
-            </div>
-        </div>
-    </div>
+
+
     <script type="module" src="admin-script.js"></script>
     <script>
         function cambiarVista(id, el) {
