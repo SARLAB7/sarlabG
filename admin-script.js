@@ -39,6 +39,86 @@ onAuthStateChanged(auth, (u) => {
         document.getElementById('login-screen').style.display = 'flex';
     }
 });
+// --- NUEVAS FUNCIONES DE GESTIÓN DE STOCK ---
+
+// 1. Llenar selectores de los modales
+function actualizarSelectoresInsumos() {
+    const options = insumosGlobales.map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`).join('');
+    const sCompra = document.getElementById('compra-insumo');
+    const sMerma = document.getElementById('merma-insumo');
+    if(sCompra) sCompra.innerHTML = options;
+    if(sMerma) sMerma.innerHTML = options;
+}
+
+// 2. Registrar Compra
+const formCompra = document.getElementById('f-compra');
+if(formCompra) {
+    formCompra.onsubmit = async (e) => {
+        e.preventDefault();
+        const insId = document.getElementById('compra-insumo').value;
+        const cant = Number(document.getElementById('compra-cant').value);
+        const costo = Number(document.getElementById('compra-costo').value);
+        
+        const insumo = insumosGlobales.find(i => i.id === insId);
+        // Aplicar factor de conversión (Ej: Si compra 1kg y factor es 1000, suma 1000g)
+        const cantidadReal = insumo.factor ? cant * insumo.factor : cant;
+
+        try {
+            // Actualizar Stock
+            await updateDoc(doc(db, "inventario", insId), {
+                stockActual: increment(cantidadReal),
+                costoUnitario: costo / cantidadReal // Actualiza el costo promedio
+            });
+            // Registrar en historial de compras
+            await addDoc(collection(db, "kardex"), {
+                insumoId: insId,
+                tipo: 'entrada',
+                concepto: 'Compra Abastecimiento',
+                cantidad: cantidadReal,
+                timestamp: serverTimestamp()
+            });
+            cerrarModales();
+        } catch (error) { console.error("Error en compra:", error); }
+    };
+}
+
+// 3. Registrar Merma
+const formMerma = document.getElementById('f-merma');
+if(formMerma) {
+    formMerma.onsubmit = async (e) => {
+        e.preventDefault();
+        const insId = document.getElementById('merma-insumo').value;
+        const cant = Number(document.getElementById('merma-cant').value);
+        const motivo = document.getElementById('merma-motivo').value;
+
+        try {
+            await updateDoc(doc(db, "inventario", insId), {
+                stockActual: increment(-cant)
+            });
+            await addDoc(collection(db, "kardex"), {
+                insumoId: insId,
+                tipo: 'salida',
+                concepto: `Merma: ${motivo}`,
+                cantidad: cant,
+                timestamp: serverTimestamp()
+            });
+            cerrarModales();
+        } catch (error) { console.error("Error en merma:", error); }
+    };
+}
+
+// 4. UI: Abrir/Cerrar Modales
+window.abrirModalCompra = () => { actualizarSelectoresInsumos(); document.getElementById('modal-compra').style.display = 'flex'; };
+window.abrirModalMerma = () => { actualizarSelectoresInsumos(); document.getElementById('modal-merma').style.display = 'flex'; };
+window.cerrarModales = () => {
+    document.getElementById('modal-compra').style.display = 'none';
+    document.getElementById('modal-merma').style.display = 'none';
+    document.getElementById('f-compra').reset();
+    document.getElementById('f-merma').reset();
+};
+
+// 5. Modificación en escucharInventario para incluir Kardex rápido
+// (Añade un botón de "Historial" a cada tarjeta)
 
 // --- 2. GESTIÓN DE INVENTARIO (BODEGA) ---
 function escucharInventario() {
