@@ -38,6 +38,15 @@
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 Métricas
             </div>
+<div class="nav-item" onclick="cambiarVista('v-inventario', this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 8l-2-2H5L3 8v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"></path>
+        <path d="M3 8h18"></path>
+        <path d="M10 12h4"></path>
+    </svg>
+    Inventario e Insumos
+</div>
+
            <div style="margin-top: auto;">
     <div class="nav-item" id="logout-btn" style="color: #ef4444;">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -179,6 +188,71 @@
                     </button>
                 </div>
             </section>
+            <section id="v-inventario" class="view-section">
+    <div class="dashboard-header">
+        <h2>Control de Bodega</h2>
+    </div>
+
+    <div style="display: flex; gap: 30px; flex-wrap: wrap-reverse;">
+        <!-- LISTADO DE INSUMOS -->
+        <div style="flex: 2; min-width: 350px;">
+            <div id="alertas-inventario-critico"></div> <!-- Aquí caerán los banners rojos -->
+            
+            <h3 style="margin-bottom: 20px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Insumos en existencia</h3>
+            <div id="lista-insumos" class="bento-grid-stats" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                <!-- Se llenará dinámicamente con JS -->
+                <div class="stat-card" style="opacity: 0.5; border: 1px dashed var(--border);">
+                    <p>Cargando bodega...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULARIO DE INSUMOS (Sticky para que no se pierda al hacer scroll) -->
+        <div style="flex: 1; min-width: 320px;">
+            <div class="form-container" style="position: sticky; top: 20px; background: var(--card-dark); padding: 25px; border-radius: 24px; border: 1px solid var(--border);">
+                <h3 id="f-inv-title" style="margin-bottom: 24px;">Configurar Insumo</h3>
+                <form id="inv-form" style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="hidden" id="inv-id">
+                    
+                    <label style="font-size: 0.75rem; color: var(--accent-yellow);">NOMBRE DEL INSUMO</label>
+                    <input type="text" id="inv-name" placeholder="Ej: Carne de Res (g)" required>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted);">CANTIDAD ACTUAL</label>
+                            <input type="number" id="inv-stock" placeholder="0" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted);">UNIDAD</label>
+                            <select id="inv-unit">
+                                <option value="unidades">Unidades</option>
+                                <option value="gramos">Gramos (g)</option>
+                                <option value="ml">Mililitros (ml)</option>
+                                <option value="porciones">Porciones</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: var(--danger);">AVISO CRÍTICO (MIN)</label>
+                            <input type="number" id="inv-min" placeholder="Ej: 10" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: var(--success);">COSTO UNITARIO</label>
+                            <input type="number" id="inv-cost" placeholder="$ 0" required>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 10px;">
+                        <button type="submit" class="btn-action btn-yellow" style="flex: 2;">Guardar en Bodega</button>
+                        <button type="button" onclick="cancelarEdicionInv()" id="btn-cancelar-inv" class="btn-action btn-outline" style="display: none; flex: 1;">X</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
         </main>
     </div>
 
