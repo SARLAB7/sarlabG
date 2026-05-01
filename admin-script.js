@@ -51,14 +51,38 @@ function escucharPedidos() {
 function renderPedidosUI() {
     const lp = document.getElementById('l-pendientes'), la = document.getElementById('l-atendidos');
     if(!lp || !la) return; lp.innerHTML = ''; la.innerHTML = '';
+    
     pedidosGlobales.forEach(p => {
         if (p.estado === 'rechazado') return;
-        const card = document.createElement('div'); card.className = `pedido-card ${p.estado}`; card.id = `card-${p.id}`;
-        let btnA = p.estado === 'pendiente' ? `<div style="display:flex; gap:8px;"><button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:3;">${ICON_PREPARE} PREPARAR</button><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="flex:1;">${ICON_X}</button></div>` : 
-                   p.estado === 'preparando' ? `<div class="grid-pagos"><button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button><button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button><button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button></div>` : 
-                   `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%;">${ICON_PREPARE} REVERTIR</button>`;
         
-        card.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>${p.cliente}</strong><button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')" style="background:none; border:none; cursor:pointer;">🖨️</button></div><div style="font-size:0.8rem; color:var(--text-muted);">${p.tipo} - $${Number(p.total).toLocaleString()}</div><div style="margin:10px 0;">${p.items.map(i => `<div>• ${i.nombre}</div>`).join('')}</div>${btnA}`;
+        const card = document.createElement('div'); 
+        card.className = `pedido-card ${p.estado}`; 
+        card.id = `card-${p.id}`;
+        
+        // Aquí está la magia visual: El botón ahora es ROJO y dice "RECHAZAR"
+        let btnA = p.estado === 'pendiente' 
+            ? `<div style="display:flex; gap:8px;">
+                 <button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:2;">${ICON_PREPARE} PREPARAR</button>
+                 <button onclick="rechazarPedido('${p.id}')" class="btn-action" style="flex:1; background: var(--danger); color: white; border: none; font-size: 0.8rem; font-weight: bold;">✕ RECHAZAR</button>
+               </div>` 
+            : p.estado === 'preparando' 
+            ? `<div class="grid-pagos">
+                 <button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button>
+                 <button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button>
+                 <button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button>
+               </div>` 
+            : `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%;">${ICON_PREPARE} REVERTIR</button>`;
+        
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${p.cliente}</strong>
+                <button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')" style="background:none; border:none; cursor:pointer; font-size: 1.2rem;">🖨️</button>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">${p.tipo} - $${Number(p.total).toLocaleString()}</div>
+            <div style="margin:10px 0;">${p.items.map(i => `<div>• ${i.nombre}</div>`).join('')}</div>
+            ${btnA}
+        `;
+        
         p.estado === 'listo' ? la.appendChild(card) : lp.appendChild(card);
     });
 }
