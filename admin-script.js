@@ -167,36 +167,43 @@ function escucharInventario() {
         const lista = document.getElementById('lista-insumos');
         if (!lista) return;
 
+        // 1. EL FIX MÁGICO: Evita que el contenedor estire las tarjetas
+        lista.style.alignItems = 'start';
+        lista.style.gap = '16px'; 
+
         insumosGlobales = [];
         let htmlLista = '';
+        
         snap.forEach(docSnap => {
             const i = docSnap.data(); i.id = docSnap.id; insumosGlobales.push(i);
             const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
-            const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
+            const colorCard = esCritico ? '#ef4444' : 'var(--border)';
 
+            // 2. DISEÑO CORREGIDO: Forzamos el fondo oscuro y la altura máxima
             htmlLista += `
-                <div class="stat-card" style="border: 1px solid ${colorCard}; position: relative; padding: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px;">
-                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+                <div style="border: 1px solid ${colorCard}; background: var(--sidebar, #1e293b); border-radius: 16px; position: relative; padding: 20px; height: max-content; width: 100%; box-sizing: border-box;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px;">
+                        <span style="font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">
                             ${i.unidad} ${i.factor ? `(F: ${i.factor})` : ''}
                         </span>
-                        <div style="display:flex; gap:8px;">
+                        <div style="display:flex; gap:12px;">
                             <button onclick="verHistorialInsumo('${i.id}', '${i.nombre}')" style="background:none; border:none; color:var(--accent-yellow); cursor:pointer;">🕒</button>
-                            <button onclick="eliminarInsumoModal('${i.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">${ICON_TRASH}</button>
+                            <button onclick="eliminarInsumoModal('${i.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;">${ICON_TRASH}</button>
                         </div>
                     </div>
                     <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario}, ${i.factor || 1})" style="cursor:pointer;">
-                        <strong style="font-size: 1.1rem; display: block; color: var(--white);">${i.nombre}</strong>
-                        <div style="font-size: 1.6rem; font-weight: 800; color: ${esCritico ? 'var(--danger)' : 'var(--white)'}; margin: 5px 0;">
+                        <strong style="font-size: 1.1rem; display: block; color: #ffffff;">${i.nombre}</strong>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: ${esCritico ? '#ef4444' : '#ffffff'}; margin: 5px 0;">
                             ${Number(i.stockActual).toLocaleString()}
                         </div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                        <div style="font-size: 0.75rem; color: #94a3b8;">
                             Costo Prom: $${Number(i.costoUnitario || 0).toFixed(2)}
                         </div>
                     </div>
                 </div>
             `;
         });
+        
         lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Sin insumos.</p>';
         actualizarSelectoresInsumos();
     });
