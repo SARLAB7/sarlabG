@@ -1,7 +1,7 @@
 import { db, auth } from './firebase-config.js';
 import { 
     collection, onSnapshot, query, orderBy, doc, 
-    deleteDoc, updateDoc, serverTimestamp, addDoc, increment 
+    deleteDoc, updateDoc, serverTimestamp, addDoc, increment, getDocs, where, limit 
 } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { 
     GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut 
@@ -15,15 +15,12 @@ const CORREO_MASTER = "cb01grupo@gmail.com";
 const correosAutorizados = [CORREO_MASTER, "kelly.araujotafur@gmail.com"];
 
 // --- ICONOS ---
-const ICON_PREPARE = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
-const ICON_X = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 const ICON_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
 // --- 1. AUTENTICACIÓN ---
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
-
 if (loginBtn) loginBtn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
 if (logoutBtn) logoutBtn.onclick = () => signOut(auth);
 
@@ -39,411 +36,178 @@ onAuthStateChanged(auth, (u) => {
         document.getElementById('login-screen').style.display = 'flex';
     }
 });
-// --- NUEVAS FUNCIONES DE GESTIÓN DE STOCK ---
 
-// 1. Llenar selectores de los modales
-function actualizarSelectoresInsumos() {
-    const options = insumosGlobales.map(i => `<option value="${i.id}">${i.nombre} (${i.unidad})</option>`).join('');
-    const sCompra = document.getElementById('compra-insumo');
-    const sMerma = document.getElementById('merma-insumo');
-    if(sCompra) sCompra.innerHTML = options;
-    if(sMerma) sMerma.innerHTML = options;
+// --- 2. KARDEX Y AUDITORÍA ---
+window.verHistorialInsumo = async (id, nombre) => {
+    const seccion = document.getElementById('seccion-kardex');
+    const tablaBody = document.getElementById('tabla-kardex-body');
+    seccion.style.display = 'block';
+    seccion.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('kardex-titulo').innerText = `Historial: ${nombre}`;
+    tablaBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Consultando...</td></tr>';
+
+    try {
+        const q = query(collection(db, "kardex"), where("insumoId", "==", id), orderBy("timestamp", "desc"), limit(20));
+        const snap = await getDocs(q);
+        let rows = '';
+        snap.forEach(d => {
+            const m = d.data();
+            const fecha = m.timestamp?.toDate().toLocaleString() || 'Reciente';
+            const esEntrada = m.tipo === 'entrada';
+            rows += `<tr>
+                <td style="padding:12px; color:#94a3b8;">${fecha}</td>
+                <td style="padding:12px;">${m.concepto}</td>
+                <td style="padding:12px; color:${esEntrada ? '#22c55e' : '#ef4444'}">${m.tipo.toUpperCase()}</td>
+                <td style="padding:12px; text-align:right;">${esEntrada ? '+' : '-'}${m.cantidad}</td>
+            </tr>`;
+        });
+        tablaBody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;">Sin movimientos.</td></tr>';
+    } catch (e) { console.error(e); }
+};
+
+// --- 3. GESTIÓN DE INVENTARIO ---
+function escucharInventario() {
+    onSnapshot(collection(db, "inventario"), (snap) => {
+        const lista = document.getElementById('lista-insumos');
+        if (!lista) return;
+        insumosGlobales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let html = '';
+        insumosGlobales.forEach(i => {
+            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
+            html += `<div class="stat-card" style="border: 1px solid ${esCritico ? '#ef4444' : 'rgba(255,255,255,0.1)'};">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:0.6rem; color:#94a3b8;">${i.unidad.toUpperCase()}</span>
+                    <div>
+                        <button onclick="verHistorialInsumo('${i.id}', '${i.nombre}')" style="background:none; border:none; cursor:pointer;">🕒</button>
+                        <button onclick="eliminarInsumoModal('${i.id}')" style="background:none; border:none; cursor:pointer; color:#ef4444;">${ICON_TRASH}</button>
+                    </div>
+                </div>
+                <strong onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario}, ${i.factor || 1})" style="cursor:pointer; display:block; margin:5px 0;">${i.nombre}</strong>
+                <div style="font-size:1.5rem; font-weight:700;">${i.stockActual.toLocaleString()}</div>
+            </div>`;
+        });
+        lista.innerHTML = html;
+        actualizarSelectoresInsumos();
+    });
 }
 
-// 2. Registrar Compra
 const formCompra = document.getElementById('f-compra');
 if(formCompra) {
     formCompra.onsubmit = async (e) => {
         e.preventDefault();
-        const insId = document.getElementById('compra-insumo').value;
+        const id = document.getElementById('compra-insumo').value;
         const cant = Number(document.getElementById('compra-cant').value);
         const costo = Number(document.getElementById('compra-costo').value);
-        
-        const insumo = insumosGlobales.find(i => i.id === insId);
-        // Aplicar factor de conversión (Ej: Si compra 1kg y factor es 1000, suma 1000g)
-        const cantidadReal = insumo.factor ? cant * insumo.factor : cant;
+        const ins = insumosGlobales.find(i => i.id === id);
+        const totalVenta = cant * (ins.factor || 1);
 
-        try {
-            // Actualizar Stock
-            await updateDoc(doc(db, "inventario", insId), {
-                stockActual: increment(cantidadReal),
-                costoUnitario: costo / cantidadReal // Actualiza el costo promedio
-            });
-            // Registrar en historial de compras
-            await addDoc(collection(db, "kardex"), {
-                insumoId: insId,
-                tipo: 'entrada',
-                concepto: 'Compra Abastecimiento',
-                cantidad: cantidadReal,
-                timestamp: serverTimestamp()
-            });
-            cerrarModales();
-        } catch (error) { console.error("Error en compra:", error); }
+        await updateDoc(doc(db, "inventario", id), {
+            stockActual: increment(totalVenta),
+            costoUnitario: costo / totalVenta
+        });
+        await addDoc(collection(db, "kardex"), { insumoId: id, tipo: 'entrada', concepto: 'Compra Stock', cantidad: totalVenta, timestamp: serverTimestamp() });
+        cerrarModales();
     };
 }
 
-// 3. Registrar Merma
 const formMerma = document.getElementById('f-merma');
 if(formMerma) {
     formMerma.onsubmit = async (e) => {
         e.preventDefault();
-        const insId = document.getElementById('merma-insumo').value;
+        const id = document.getElementById('merma-insumo').value;
         const cant = Number(document.getElementById('merma-cant').value);
-        const motivo = document.getElementById('merma-motivo').value;
+        const mot = document.getElementById('merma-motivo').value;
 
-        try {
-            await updateDoc(doc(db, "inventario", insId), {
-                stockActual: increment(-cant)
-            });
-            await addDoc(collection(db, "kardex"), {
-                insumoId: insId,
-                tipo: 'salida',
-                concepto: `Merma: ${motivo}`,
-                cantidad: cant,
-                timestamp: serverTimestamp()
-            });
-            cerrarModales();
-        } catch (error) { console.error("Error en merma:", error); }
+        await updateDoc(doc(db, "inventario", id), { stockActual: increment(-cant) });
+        await addDoc(collection(db, "kardex"), { insumoId: id, tipo: 'salida', concepto: `Merma: ${mot}`, cantidad: cant, timestamp: serverTimestamp() });
+        cerrarModales();
     };
 }
 
-// 4. UI: Abrir/Cerrar Modales
-window.abrirModalCompra = () => { actualizarSelectoresInsumos(); document.getElementById('modal-compra').style.display = 'flex'; };
-window.abrirModalMerma = () => { actualizarSelectoresInsumos(); document.getElementById('modal-merma').style.display = 'flex'; };
-window.cerrarModales = () => {
-    document.getElementById('modal-compra').style.display = 'none';
-    document.getElementById('modal-merma').style.display = 'none';
-    document.getElementById('f-compra').reset();
-    document.getElementById('f-merma').reset();
-};
-
-// 5. Modificación en escucharInventario para incluir Kardex rápido
-// (Añade un botón de "Historial" a cada tarjeta)
-
-// --- 2. GESTIÓN DE INVENTARIO (BODEGA) ---
-function escucharInventario() {
-    onSnapshot(collection(db, "inventario"), (snap) => {
-        const lista = document.getElementById('lista-insumos');
-        const alertasCocina = document.getElementById('notificaciones-cocina');
-        if (!lista) return;
-
-        insumosGlobales = []; // Refrescar lista global para recetas
-        let htmlLista = '';
-        let htmlAlertas = '';
-
-        snap.forEach(docSnap => {
-            const i = docSnap.data();
-            i.id = docSnap.id;
-            insumosGlobales.push(i);
-
-            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
-            const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
-            const bgCard = esCritico ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-dark)';
-
-            htmlLista += `
-                <div class="stat-card" style="border: 1px solid ${colorCard}; background: ${bgCard}; position: relative;">
-                    <button onclick="event.stopPropagation(); eliminarInsumoModal('${i.id}')" 
-                            style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text-muted); cursor: pointer; z-index: 5;">
-                        ${ICON_TRASH}
-                    </button>
-                    <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unit || i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})" style="cursor:pointer;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unit || i.unidad}</span>
-                            ${esCritico ? '<span style="color:var(--danger); font-size:1.2rem; margin-right: 25px;">⚠️</span>' : ''}
-                        </div>
-                        <strong style="font-size: 1.1rem; display: block; margin: 5px 0; color: var(--white);">${i.nombre}</strong>
-                        <div style="font-size: 1.5rem; font-weight: 800; color: ${esCritico ? 'var(--danger)' : 'var(--accent-yellow)'};">
-                            ${i.stockActual} 
-                        </div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
-                            Costo: $${Number(i.costoUnitario).toLocaleString()} | Min: ${i.umbralMinimo}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            if (esCritico) {
-                htmlAlertas += `
-                    <div style="background: var(--danger); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; animation: pulse 2s infinite;">
-                        <span><strong>¡AGOTÁNDOSE!</strong> Se requiere ${i.nombre.toUpperCase()} (Quedan: ${i.stockActual})</span>
-                        <button onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\\'v-inventario\\']'))" style="background: white; color: var(--danger); border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem;">ABASTECER</button>
-                    </div>
-                `;
+// --- 4. PROCESAR VENTAS (DESCUENTO AUTOMÁTICO) ---
+async function procesarDescuentoStock(pedidoId) {
+    const p = pedidosGlobales.find(x => x.id === pedidoId);
+    if (!p) return;
+    for (const item of p.items) {
+        const plato = menuGlobal[item.nombre];
+        if (plato?.receta) {
+            for (const [insId, cant] of Object.entries(plato.receta)) {
+                await updateDoc(doc(db, "inventario", insId), { stockActual: increment(-cant) });
+                await addDoc(collection(db, "kardex"), { insumoId: insId, tipo: 'salida', concepto: `Venta: ${item.nombre}`, cantidad: cant, timestamp: serverTimestamp() });
             }
-        });
-        lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Bodega vacía.</p>';
-        if (alertasCocina) alertasCocina.innerHTML = htmlAlertas;
-    });
+        }
+    }
 }
 
-window.editarInsumo = (id, n, s, u, m, c) => {
-    document.getElementById('inv-id').value = id;
-    document.getElementById('inv-name').value = decodeURIComponent(n);
-    document.getElementById('inv-stock').value = s;
-    document.getElementById('inv-unit').value = u;
-    document.getElementById('inv-min').value = m;
-    document.getElementById('inv-cost').value = c;
-    document.getElementById('f-inv-title').innerText = "Actualizando Insumo";
-    document.getElementById('btn-cancelar-inv').style.display = 'block';
-    document.querySelector('#v-inventario .form-container').scrollIntoView({ behavior: 'smooth' });
+// --- 5. CARTA Y RECETAS ---
+window.agregarFilaReceta = (insId = '', cant = '') => {
+    const div = document.createElement('div');
+    div.className = 'fila-receta';
+    div.style = "display:flex; gap:5px; margin-bottom:5px;";
+    let opts = insumosGlobales.map(i => `<option value="${i.id}" ${i.id === insId ? 'selected' : ''}>${i.nombre}</option>`).join('');
+    div.innerHTML = `<select class="receta-insumo" style="flex:2;">${opts}</select><input type="number" class="receta-cantidad" value="${cant}" style="flex:1;" step="any"><button type="button" onclick="this.parentElement.remove()" style="color:#ef4444; background:none; border:none;">✕</button>`;
+    document.getElementById('receta-items').appendChild(div);
 };
 
-window.cancelarEdicionInv = () => {
-    document.getElementById('inv-form').reset();
-    document.getElementById('inv-id').value = '';
-    document.getElementById('f-inv-title').innerText = "Configurar Insumo";
-    document.getElementById('btn-cancelar-inv').style.display = 'none';
-};
-
-const formInv = document.getElementById('inv-form');
-if(formInv) {
-    formInv.onsubmit = async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('inv-id').value;
-        const datos = {
-            nombre: document.getElementById('inv-name').value,
-            stockActual: Number(document.getElementById('inv-stock').value),
-            unidad: document.getElementById('inv-unit').value,
-            umbralMinimo: Number(document.getElementById('inv-min').value),
-            costoUnitario: Number(document.getElementById('inv-cost').value),
-            lastUpdate: serverTimestamp()
-        };
-        try {
-            id ? await updateDoc(doc(db, "inventario", id), datos) : await addDoc(collection(db, "inventario"), datos);
-            window.cancelarEdicionInv();
-        } catch (error) { console.error("Error en bodega:", error); }
-    };
-}
-
-window.eliminarInsumoModal = (id) => {
-    idParaEliminar = "INSUMO:" + id; 
-    document.getElementById('modal-title').innerText = '¿Eliminar este insumo de bodega?'; 
-    document.getElementById('delete-modal').style.display = 'flex'; 
-};
-
-// --- 3. GESTIÓN DE CARTA Y RECETAS ---
+// --- RESTO DE FUNCIONES (UI, PEDIDOS, MÉTRICAS) ---
 function escucharCarta() {
     onSnapshot(collection(db, "platos"), (snap) => {
         const list = document.getElementById('inv-list'); if (!list) return;
-        const cats = { diario: { titulo: "Menú del Día", platos: [] }, desayuno: { titulo: "Desayunos", platos: [] }, especial: { titulo: "Especiales", platos: [] }, asado: { titulo: "Asados", platos: [] }, rapida: { titulo: "Comida Rápida", platos: [] }, bebida: { titulo: "Bebidas", platos: [] }, otros: { titulo: "Otros", platos: [] } };
-        
+        let html = '';
         snap.forEach(d => {
-            const it = d.data(); it.id = d.id; 
-            menuGlobal[it.nombre] = it; // Guardar objeto completo incluyendo receta
-            if (cats[it.categoria]) cats[it.categoria].platos.push(it); else cats['otros'].platos.push(it);
+            const it = d.data(); it.id = d.id; menuGlobal[it.nombre] = it;
+            html += `<div class="plato-row" style="background:var(--sidebar); padding:10px; border-radius:10px; margin-bottom:5px; display:flex; justify-content:space-between;">
+                <span>${it.nombre} ($${it.precio})</span>
+                <button onclick="editarPlato('${it.id}', '${encodeURIComponent(it.nombre)}', ${it.precio}, '${it.categoria}', '', '', '${encodeURIComponent(JSON.stringify(it.receta || {}))}')" style="background:none; border:none; color:#3b82f6; cursor:pointer;">${ICON_EDIT}</button>
+            </div>`;
         });
-
-        let h = '';
-        for (const k in cats) {
-            if (cats[k].platos.length === 0) continue;
-            const catId = `cat-${k}`, chevId = `chev-${k}`;
-            let ph = cats[k].platos.map(it => `
-                <div class="plato-row" style="background: var(--sidebar); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                    <div><strong style="color:var(--white);">${it.nombre}</strong><br><span style="color:var(--success); font-size:0.9rem;">$${Number(it.precio).toLocaleString()}</span></div>
-                    <div style="display:flex; gap:12px;">
-                        <button onclick="editarPlato('${it.id}', '${encodeURIComponent(it.nombre)}', '${it.precio}', '${it.categoria}', '${encodeURIComponent(it.descripcion || '')}', '${(it.ingredientes || []).join(', ')}', '${encodeURIComponent(JSON.stringify(it.receta || {}))}')" style="color:#3b82f6; background:none; border:none; cursor:pointer;">${ICON_EDIT}</button>
-                        <button onclick="eliminarPlatoModal('${it.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">${ICON_TRASH}</button>
-                    </div>
-                </div>`).join('');
-            h += `<div class="categoria-wrapper" style="margin-bottom:12px;"><div class="categoria-header" onclick="toggleCategoria('${catId}', '${chevId}')"><div style="display:flex; align-items:center;"><h4>${cats[k].titulo}</h4><span class="count-badge">${cats[k].platos.length}</span></div><svg id="${chevId}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:0.3s;"><polyline points="6 9 12 15 18 9"></polyline></svg></div><div id="${catId}" class="lista-categoria-oculta lista-categoria">${ph}</div></div>`;
-        }
-        list.innerHTML = h;
-        categoriasAbiertas.forEach(id => { const el = document.getElementById(id), ch = document.getElementById(id.replace('cat-', 'chev-')); if (el) { el.classList.remove('lista-categoria-oculta'); if(ch) ch.style.transform = 'rotate(180deg)'; } });
+        list.innerHTML = html;
     });
 }
 
-window.agregarFilaReceta = (insumoId = '', cantidad = '') => {
-    const contenedor = document.getElementById('receta-items');
-    if (!contenedor) return;
-    const div = document.createElement('div');
-    div.className = 'fila-receta';
-    div.style = "display: flex; gap: 8px; margin-bottom: 8px; align-items: center;";
-    let opciones = insumosGlobales.map(i => `<option value="${i.id}" ${i.id === insumoId ? 'selected' : ''}>${i.nombre} (${i.unidad})</option>`).join('');
-    div.innerHTML = `
-        <select class="receta-insumo" style="flex: 2; margin-bottom:0;">
-            <option value="">Seleccionar insumo...</option>${opciones}
-        </select>
-        <input type="number" class="receta-cantidad" placeholder="Cant." value="${cantidad}" style="flex: 1; margin-bottom:0;" step="any">
-        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--danger); cursor:pointer;">${ICON_X}</button>
-    `;
-    contenedor.appendChild(div);
-};
-
-window.editarPlato = (id, n, p, c, d, i, recetaJson) => {
-    document.getElementById('edit-id').value = id; 
-    document.getElementById('name').value = decodeURIComponent(n); 
-    document.getElementById('price').value = p; 
-    document.getElementById('category').value = c; 
-    document.getElementById('desc').value = decodeURIComponent(d); 
-    document.getElementById('ingredients').value = i; 
-    document.getElementById('f-title').innerText = "Editando Plato"; 
-    document.getElementById('btn-cancelar').style.display = 'block';
-
-    const recetaItems = document.getElementById('receta-items');
-    recetaItems.innerHTML = '';
-    const receta = JSON.parse(decodeURIComponent(recetaJson || '{}'));
+window.editarPlato = (id, n, p, c, d, i, r) => {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('name').value = decodeURIComponent(n);
+    document.getElementById('price').value = p;
+    document.getElementById('category').value = c;
+    const items = document.getElementById('receta-items'); items.innerHTML = '';
+    const receta = JSON.parse(decodeURIComponent(r || '{}'));
     Object.entries(receta).forEach(([insId, cant]) => agregarFilaReceta(insId, cant));
-
-    document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('f-title').innerText = "Editando Plato";
 };
 
-window.cancelarEdicion = () => { 
-    document.getElementById('m-form').reset(); 
-    document.getElementById('edit-id').value = ''; 
-    document.getElementById('receta-items').innerHTML = '';
-    document.getElementById('f-title').innerText = "Configurar Plato"; 
-    document.getElementById('btn-cancelar').style.display = 'none'; 
-};
-
-document.getElementById('m-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('edit-id').value;
-    const receta = {};
-    document.querySelectorAll('.fila-receta').forEach(fila => {
-        const insId = fila.querySelector('.receta-insumo').value;
-        const cant = Number(fila.querySelector('.receta-cantidad').value);
-        if (insId && cant > 0) receta[insId] = cant;
-    });
-
-    const datos = { 
-        nombre: document.getElementById('name').value, 
-        precio: Number(document.getElementById('price').value), 
-        categoria: document.getElementById('category').value, 
-        descripcion: document.getElementById('desc').value, 
-        ingredientes: document.getElementById('ingredients').value.split(',').map(s => s.trim()).filter(s => s !== ''), 
-        receta: receta,
-        timestamp: serverTimestamp() 
-    };
-    if(!id) datos.disponible = true;
-    id ? await updateDoc(doc(db, "platos", id), datos) : await addDoc(collection(db, "platos"), datos);
-    window.cancelarEdicion();
-};
-
-// --- 4. GESTIÓN DE PEDIDOS Y DESCUENTO DE STOCK ---
-async function procesarDescuentoStock(pedidoId) {
-    const pedido = pedidosGlobales.find(p => p.id === pedidoId);
-    if (!pedido) return;
-
-    for (const item of pedido.items) {
-        const platoRef = menuGlobal[item.nombre];
-        if (platoRef && platoRef.receta) {
-            for (const [insumoId, cantidad] of Object.entries(platoRef.receta)) {
-                const insumoDoc = doc(db, "inventario", insumoId);
-                await updateDoc(insumoDoc, { stockActual: increment(-cantidad) });
-            }
-        }
-    }
-}
-
-window.actualizarEstado = async (id, estado) => {
-    if (estado === 'preparando') {
-        await procesarDescuentoStock(id);
-    }
-    await updateDoc(doc(db, "pedidos", id), { estado });
+window.actualizarEstado = async (id, est) => {
+    if (est === 'preparando') await procesarDescuentoStock(id);
+    await updateDoc(doc(db, "pedidos", id), { estado: est });
 };
 
 function escucharPedidos() {
     onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
-        pedidosGlobales = [];
+        pedidosGlobales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         const lp = document.getElementById('l-pendientes'), la = document.getElementById('l-atendidos');
         if(!lp || !la) return; lp.innerHTML = ''; la.innerHTML = '';
-        snap.docs.forEach(docSnap => {
-            const p = docSnap.data(); p.id = docSnap.id; pedidosGlobales.push(p);
+        pedidosGlobales.forEach(p => {
             if (p.estado === 'rechazado') return;
-            const card = document.createElement('div'); card.className = `pedido-card ${p.estado}`; card.id = `card-${p.id}`;
-            let btnA = p.estado === 'pendiente' ? `<div style="display:flex; gap:8px;"><button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:3;">${ICON_PREPARE} PREPARAR</button><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="flex:1;">${ICON_X}</button></div>` : 
-                       p.estado === 'preparando' ? `<div class="grid-pagos"><button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button><button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button><button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button></div>` : 
-                       `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%;">${ICON_PREPARE} REVERTIR</button>`;
-            card.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>${p.cliente}</strong><button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')">🖨️</button></div><div style="font-size:0.8rem; color:var(--text-muted);">${p.tipo} - $${Number(p.total).toLocaleString()}</div><div style="margin:10px 0;">${p.items.map(i => `<div>• ${i.nombre}</div>`).join('')}</div>${btnA}`;
+            const card = document.createElement('div'); card.className = `pedido-card ${p.estado}`;
+            card.innerHTML = `<strong>${p.cliente}</strong><br>${p.items.map(i => i.nombre).join(', ')}<br>
+            ${p.estado === 'pendiente' ? `<button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-action btn-primary">PREPARAR</button>` : ''}
+            ${p.estado === 'preparando' ? `<button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-action btn-success">LISTO (Efectivo)</button>` : ''}`;
             p.estado === 'listo' ? la.appendChild(card) : lp.appendChild(card);
         });
-        actualizarMétricas(); renderizarPlanoMesas(pedidosGlobales);
+        actualizarMétricas();
     });
 }
 
-// --- 5. UI Y MODALES ---
-const btnConfirmar = document.getElementById('confirm-delete-btn');
-if(btnConfirmar) {
-    btnConfirmar.onclick = async () => {
-        if(idParaEliminar === "MASTER") {
-            const ps = pedidosGlobales.map(p => deleteDoc(doc(db, "pedidos", p.id))); await Promise.all(ps);
-        } else if(idParaEliminar?.startsWith("RECHAZAR:")) {
-            await updateDoc(doc(db, "pedidos", idParaEliminar.split(":")[1]), { estado: 'rechazado' });
-        } else if(idParaEliminar?.startsWith("INSUMO:")) {
-            await deleteDoc(doc(db, "inventario", idParaEliminar.split(":")[1]));
-        } else if(idParaEliminar) {
-            await deleteDoc(doc(db, "platos", idParaEliminar));
-        }
-        idParaEliminar = null; document.getElementById('delete-modal').style.display = 'none';
-    };
-}
-
-window.cerrarPedido = async (id, m) => await updateDoc(doc(db, "pedidos", id), { estado: 'listo', metodoPago: m });
-window.revertirPedido = async (id) => await updateDoc(doc(db, "pedidos", id), { estado: 'preparando', metodoPago: null });
-window.rechazarPedido = (id) => { idParaEliminar = "RECHAZAR:" + id; document.getElementById('modal-title').innerHTML = `<span style="color:var(--danger)">¿Rechazar pedido?</span>`; document.getElementById('delete-modal').style.display = 'flex'; };
-window.eliminarPlatoModal = (id) => { idParaEliminar = id; document.getElementById('modal-title').innerText = '¿Borrar plato?'; document.getElementById('delete-modal').style.display = 'flex'; };
-window.confirmarReinicioTotal = () => { idParaEliminar = "MASTER"; document.getElementById('modal-title').innerText = '¿REINICIAR TODO?'; document.getElementById('delete-modal').style.display = 'flex'; };
-
-window.toggleCategoria = (listaId, chevronId) => {
-    const l = document.getElementById(listaId), c = document.getElementById(chevronId);
-    if(l) { l.classList.toggle('lista-categoria-oculta'); !l.classList.contains('lista-categoria-oculta') ? categoriasAbiertas.add(listaId) : categoriasAbiertas.delete(listaId); }
-    if(c) c.style.transform = l.classList.contains('lista-categoria-oculta') ? 'rotate(0deg)' : 'rotate(180deg)';
+window.actualizarMétricas = () => {
+    let t = 0; pedidosGlobales.filter(p => p.estado === 'listo').forEach(p => t += p.total);
+    document.getElementById('s-hoy').innerText = `$${t.toLocaleString()}`;
 };
 
-window.renderizarPlanoMesas = (ps) => {
-    const g = document.getElementById('grid-mesas'); if(!g) return;
-    const mas = ps.filter(p => p.estado !== 'listo' && p.estado !== 'rechazado' && p.cliente.toLowerCase().includes('mesa'));
-    let h = '';
-    for(let i=1; i<=12; i++) {
-        const n = `Mesa ${i}`, p = mas.find(x => x.cliente.toLowerCase() === n.toLowerCase());
-        h += p ? `<div class="mesa-card mesa-ocupada" onclick="irAPedido('${p.id}')"><h3>${n}</h3><span>OCUPADA</span><div>$${Number(p.total).toLocaleString()}</div></div>` : `<div class="mesa-card mesa-libre"><h3>${n}</h3><span style="color:var(--success);">Libre</span></div>`;
-    }
-    g.innerHTML = h;
+window.abrirModalCompra = () => { actualizarSelectoresInsumos(); document.getElementById('modal-compra').style.display='flex'; };
+window.abrirModalMerma = () => { actualizarSelectoresInsumos(); document.getElementById('modal-merma').style.display='flex'; };
+window.cerrarModales = () => { document.getElementById('modal-compra').style.display='none'; document.getElementById('modal-merma').style.display='none'; };
+window.actualizarSelectoresInsumos = () => {
+    const opts = insumosGlobales.map(i => `<option value="${i.id}">${i.nombre}</option>`).join('');
+    document.getElementById('compra-insumo').innerHTML = opts; document.getElementById('merma-insumo').innerHTML = opts;
 };
-
-window.irAPedido = (id) => {
-    document.querySelector('[onclick*="v-pedidos"]').click();
-    setTimeout(() => {
-        const el = document.getElementById(`card-${id}`);
-        if(el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.border = "2px solid var(--accent-yellow)"; setTimeout(() => el.style.border = "none", 2000); }
-    }, 200);
-};
-
-window.imprimirComanda = (ps) => {
-    const p = JSON.parse(decodeURIComponent(ps));
-    const div = document.createElement('div');
-    div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p><hr><ul style="list-style:none; padding:0;">${p.items.map(i => `<li>1x ${i.nombre}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`;
-    document.body.appendChild(div); window.print(); document.body.removeChild(div);
-};
-
-// --- 6. MÉTRICAS ---
-window.actualizarMétricas = function() {
-    let tVentas = 0, tMes = 0, pedidosContados = 0, rechazadosContados = 0, valorRechazados = 0, tNequi = 0, tBanco = 0, tEfectivo = 0;
-    const ventasPlatos = {}, usoIngredientes = {}, ahora = new Date(), filtro = document.getElementById('periodo-selector')?.value || 'hoy';
-
-    pedidosGlobales.forEach(p => {
-        if(!p.timestamp) return;
-        const f = p.timestamp.toDate(), esMismoDia = f.getDate() === ahora.getDate() && f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
-        let cumpleFiltro = filtro === 'hoy' ? esMismoDia : filtro === 'semana' ? f >= (new Date().setDate(ahora.getDate()-7)) : filtro === 'mes' ? (f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear()) : true;
-
-        if(cumpleFiltro) {
-            if(p.estado === 'rechazado') { rechazadosContados++; valorRechazados += Number(p.total); }
-            else {
-                tVentas += Number(p.total); pedidosContados++;
-                if(p.metodoPago === 'nequi') tNequi += Number(p.total);
-                if(p.metodoPago === 'banco') tBanco += Number(p.total);
-                if(p.metodoPago === 'efectivo') tEfectivo += Number(p.total);
-                p.items.forEach(item => {
-                    ventasPlatos[item.nombre] = (ventasPlatos[item.nombre] || 0) + 1;
-                    const ingBase = menuGlobal[item.nombre]?.ingredientes || [], excluidos = item.excluidos || [];
-                    ingBase.forEach(ing => { if (!excluidos.includes(ing)) usoIngredientes[ing] = (usoIngredientes[ing] || 0) + 1; });
-                });
-            }
-        }
-        if(f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear() && p.estado !== 'rechazado') tMes += Number(p.total);
-    });
-
-    const setUI = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
-    setUI('s-hoy', `$${tVentas.toLocaleString()}`); setUI('s-pedidos-total', pedidosContados); setUI('s-mes', `$${tMes.toLocaleString()}`);
-    setUI('s-nequi', `$${tNequi.toLocaleString()}`); setUI('s-bancolombia', `$${tBanco.toLocaleString()}`); setUI('s-efectivo', `$${tEfectivo.toLocaleString()}`);
-};
+window.cancelarEdicionInv = () => { document.getElementById('inv-form').reset(); document.getElementById('btn-cancelar-inv').style.display='none'; };
