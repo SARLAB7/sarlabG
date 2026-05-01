@@ -344,7 +344,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 .stat-card:nth-child(1) strong {
     color: #0f1115 !important;
 }
+.dashboard-table-container {
+    overflow-x: auto; /* Permite scroll horizontal solo en la tabla si es necesario */
+}
 
+.dashboard-table-container table {
+    min-width: 800px; /* Asegura que las columnas no se colapsen */
+}
 /* 5. Selector de periodo (El desplegable) adaptado al modo oscuro */
 #periodo-selector {
     background-color: var(--sidebar) !important;
