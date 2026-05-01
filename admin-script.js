@@ -223,20 +223,53 @@ if(formInv) {
     };
 }
 
+// --- REGISTRO DE COMPRAS "IDIOMA HUMANO" ---
 const formCompra = document.getElementById('f-compra');
-if(formCompra) {
+
+if (formCompra) {
     formCompra.onsubmit = async (e) => {
         e.preventDefault();
-        const id = document.getElementById('compra-insumo').value;
-        const cantCompra = Number(document.getElementById('compra-cant').value);
-        const costoTotal = Number(document.getElementById('compra-costo').value);
-        const insumo = insumosGlobales.find(i => i.id === id);
-        const factor = Number(insumo.factor) || 1;
-        const cantReal = cantCompra * factor;
 
-        await updateDoc(doc(db, "inventario", id), { stockActual: increment(cantReal), costoUnitario: costoTotal / cantReal });
-        await addDoc(collection(db, "kardex"), { insumoId: id, tipo: 'entrada', concepto: 'Compra Stock', cantidad: cantReal, costoReferencia: costoTotal, timestamp: serverTimestamp() });
-        cerrarModales();
+        // 1. Capturamos los datos con nombres lógicos
+        const idInsumo = document.getElementById('compra-insumo').value;
+        const paquetesRecibidos = Number(document.getElementById('compra-cant').value);
+        const inversionTotal = Number(document.getElementById('compra-costo').value);
+
+        // 2. Buscamos el insumo para saber cuánto trae cada empaque (Factor)
+        const datosInsumo = insumosGlobales.find(i => i.id === idInsumo);
+        const contenidoPorEmpaque = Number(datosInsumo.factor) || 1;
+
+        // 3. Calculamos la cantidad real que entra a bodega
+        // Ejemplo: 2 bultos * 25000g = 50000g totales
+        const cantidadTotalIngresada = paquetesRecibidos * contenidoPorEmpaque;
+        const nuevoCostoUnitario = inversionTotal / cantidadTotalIngresada;
+
+        try {
+            // 4. Actualizamos la bodega en Firebase
+            await updateDoc(doc(db, "inventario", idInsumo), {
+                stockActual: increment(cantidadTotalIngresada),
+                costoUnitario: nuevoCostoUnitario
+            });
+
+            // 5. Guardamos en el historial (Kardex) con un mensaje claro
+            await addDoc(collection(db, "kardex"), {
+                insumoId: idInsumo,
+                tipo: 'entrada',
+                concepto: `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`,
+                cantidad: cantidadTotalIngresada,
+                costoReferencia: inversionTotal,
+                timestamp: serverTimestamp()
+            });
+
+            // Feedback para el usuario
+            alert(`¡Ingreso exitoso! Se sumaron ${cantidadTotalIngresada.toLocaleString()} ${datosInsumo.unidad} a la bodega.`);
+            
+            cerrarModales();
+
+        } catch (error) {
+            console.error("Error al registrar la compra:", error);
+            alert("Hubo un problema al guardar la compra. Revisa la conexión.");
+        }
     };
 }
 
