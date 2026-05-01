@@ -221,8 +221,16 @@
             <section id="v-balance" class="view-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        <h2 style="margin: 0; color: var(--accent-yellow);">📊 Cuadre de Inventario (Hoy)</h2>
-                    </div>
+<h2 style="margin: 0; color: var(--accent-yellow); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    📊 Cuadre de Inventario 
+    <select id="filtro-balance" onchange="abrirSeccionBalance()" style="font-size: 0.9rem; padding: 6px 12px; border-radius: 8px; background: var(--sidebar); color: var(--white); border: 1px solid var(--border); font-weight: 600; cursor: pointer;">
+        <option value="hoy">Hoy</option>
+        <option value="ayer">Ayer</option>
+        <option value="semana">Últimos 7 días</option>
+        <option value="mes">Este Mes</option>
+        <option value="todo">Histórico Completo</option>
+    </select>
+</h2>                    </div>
                     <button onclick="descargarBalanceCSV()" class="btn-action btn-primary" style="background: #10b981; color: white; border: none;">📥 Descargar Excel</button>
                     <button onclick="volverInventario()" class="btn-action btn-outline" style="color: var(--text-muted); border-color: var(--border);">← Volver</button>
                 </div>
