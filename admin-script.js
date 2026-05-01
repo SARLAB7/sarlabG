@@ -38,7 +38,7 @@ onAuthStateChanged(auth, (u) => {
     }
 });
 
-// --- 2. PEDIDOS, MESAS Y MÉTRICAS (RESTAURADO) ---
+// --- 2. PEDIDOS, MESAS Y MÉTRICAS ---
 function escucharPedidos() {
     onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
         pedidosGlobales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -163,7 +163,6 @@ function escucharInventario() {
     });
 }
 
-// Eventos de Formularios Inventario (Asegurados)
 const formInv = document.getElementById('inv-form');
 if(formInv) {
     formInv.onsubmit = async (e) => {
@@ -341,20 +340,7 @@ window.cerrarModales = () => { document.getElementById('modal-compra').style.dis
 window.imprimirComanda = (ps) => { const p = JSON.parse(decodeURIComponent(ps)); const div = document.createElement('div'); div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><hr><ul>${p.items.map(i => `<li>${i.nombre}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`; document.body.appendChild(div); window.print(); document.body.removeChild(div); };
 window.confirmarReinicioTotal = () => { idParaEliminar = "MASTER"; document.getElementById('modal-title').innerText = '¿REINICIAR TODO?'; document.getElementById('delete-modal').style.display = 'flex'; };
 
-const btnConfirmar = document.getElementById('confirm-delete-btn');
-if(btnConfirmar) {
-    btnConfirmar.onclick = async () => {
-        if(idParaEliminar === "MASTER") {
-            const ps = pedidosGlobales.map(p => deleteDoc(doc(db, "pedidos", p.id))); await Promise.all(ps);
-        } else if(idParaEliminar?.startsWith("RECHAZAR:")) {
-            await updateDoc(doc(db, "pedidos", idParaEliminar.split(":")[1]), { estado: 'rechazado' });
-        } else if(idParaEliminar?.startsWith("INSUMO:")) {
-            await deleteDoc(doc(db, "inventario", idParaEliminar.split(":")[1]));
-        } else if(idParaEliminar) {
-            await deleteDoc(doc(db, "platos", idParaEliminar));
-        }
-        idParaEliminar = null; document.getElementById('delete-modal').style.display = 'none';
-        // --- FUNCIÓN GLOBAL DE CONFIRMACIÓN (MODAL) ---
+// --- FUNCIÓN GLOBAL DE CONFIRMACIÓN (MODAL) ---
 window.confirmarAccionModal = async () => {
     const btn = document.getElementById('confirm-delete-btn');
     const textoOriginal = btn.innerText;
@@ -392,5 +378,4 @@ window.confirmarAccionModal = async () => {
         btn.innerText = textoOriginal;
         btn.disabled = false;
     }
-    };
-}
+};
