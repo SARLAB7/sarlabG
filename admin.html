@@ -131,7 +131,7 @@
                 </div>
             </section>
 
-            <!-- SECCIÓN INVENTARIO AVANZADO (CORREGIDA RESPONSIVE Y DIVS) -->
+            <!-- SECCIÓN INVENTARIO AVANZADO  -->
             <section id="v-inventario" class="view-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; width: 100%;"> 
                     <h2>Control de Bodega Avanzado</h2>
@@ -178,6 +178,9 @@
                             
                             <h3 id="f-inv-title" style="margin-bottom: 15px;">Configuración de Ítem</h3>
                             <form id="inv-form" style="display: flex; flex-direction: column; gap: 12px;">
+                                <!-- En lugar de solo 'Factor', pon una instrucción clara -->
+<label style="font-size:0.7rem;">¿CUÁNTOS [GRAMOS/ML] TRAE EL EMPAQUE QUE COMPRAS?</label>
+<input type="number" id="inv-factor" placeholder="Ej: 1000 si compras por Kilo">
                                 <input type="hidden" id="inv-id">
                                 <label style="font-size:0.7rem; color:var(--accent-yellow);">NOMBRE DEL INSUMO</label>
                                 <input type="text" id="inv-name" placeholder="Ej: Carne Res (g)" required>
