@@ -82,7 +82,15 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
 /* Dashboard Header */
 .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .dashboard-header h2 { font-size: 2rem; font-weight: 700; color: var(--white); }
+.row-hover:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
 
+.dashboard-table-container input:focus {
+    outline: none;
+    border-color: var(--accent-yellow) !important;
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.2);
+}
 /* =========================================
    COMPONENTES BENTO (TARJETAS)
    ========================================= */
