@@ -599,52 +599,6 @@ window.generarCierreCaja = async () => {
     }
 };
 
-window.generarBalanceDiarioInventario = async () => {
-    const ahora = new Date();
-    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    
-    try {
-        // Traemos los movimientos de HOY
-        const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
-        const snap = await getDocs(q);
-        
-        let balance = {}; // Aquí agruparemos por insumo
-        
-        snap.forEach(d => {
-            const mov = d.data();
-            if (!balance[mov.insumoId]) {
-                const insumoReal = insumosGlobales.find(i => i.id === mov.insumoId);
-                balance[mov.insumoId] = { 
-                    nombre: insumoReal ? insumoReal.nombre : 'Insumo Eliminado', 
-                    entradas: 0, 
-                    salidas: 0,
-                    stockActual: insumoReal ? insumoReal.stockActual : 0
-                };
-            }
-            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += mov.cantidad;
-            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += mov.cantidad;
-        });
-
-        // Construir el reporte en texto para un Alert (o puedes mandarlo a un Modal)
-        let reporte = "📊 BALANCE DE INVENTARIO HOY\n\n";
-        let huboMovimientos = false;
-
-        for (const id in balance) {
-            huboMovimientos = true;
-            const b = balance[id];
-            reporte += `🔹 ${b.nombre}:\n`;
-            reporte += `   + Entró: ${b.entradas}\n`;
-            reporte += `   - Salió (Ventas/Merma): ${b.salidas}\n`;
-            reporte += `   = QUEDÓ EN BODEGA: ${b.stockActual}\n\n`;
-        }
-
-        if (!huboMovimientos) return alert("No se han registrado movimientos de inventario el día de hoy.");
-        alert(reporte);
-
-    } catch (error) {
-        console.error("Error al generar balance:", error);
-    }
-};
 // --- 7. SECCIÓN DE BALANCE DIARIO, DESCARGA Y AJUSTE MANUAL ---
 let datosBalanceActual = [];
 
