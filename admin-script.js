@@ -194,12 +194,15 @@ function escucharInventario() {
                         </div>
                     </div>
                     <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario}, ${i.factor || 1})" style="cursor:pointer;">
-                        <strong style="font-size: 1.1rem; display: block; color: #ffffff;">${i.nombre}</strong>
+                        <strong style="font-size: 1.1rem; display: block; color: #ffffff;">
+    ${i.nombre} 
+    ${esCritico ? `<span style="background: #ef4444; color: white; font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: pulse 2s infinite;">⚠️ BAJO STOCK</span>` : ''}
+</strong>
                         <div style="font-size: 1.8rem; font-weight: 800; color: ${esCritico ? '#ef4444' : '#ffffff'}; margin: 5px 0;">
                             ${Number(i.stockActual).toLocaleString()}
                         </div>
                         <div style="font-size: 0.75rem; color: #94a3b8;">
-                            Costo Prom: $${Number(i.costoUnitario || 0).toFixed(2)}
+                           Costo Prom: $${Math.round(i.costoUnitario || 0).toLocaleString('es-CO')}
                         </div>
                     </div>
                 </div>
@@ -479,5 +482,53 @@ window.generarCierreCaja = async () => {
             console.error("Error al guardar cierre:", error);
             alert("Error al guardar en la base de datos.");
         }
+        
+    }
+};
+
+window.generarBalanceDiarioInventario = async () => {
+    const ahora = new Date();
+    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    
+    try {
+        // Traemos los movimientos de HOY
+        const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
+        const snap = await getDocs(q);
+        
+        let balance = {}; // Aquí agruparemos por insumo
+        
+        snap.forEach(d => {
+            const mov = d.data();
+            if (!balance[mov.insumoId]) {
+                const insumoReal = insumosGlobales.find(i => i.id === mov.insumoId);
+                balance[mov.insumoId] = { 
+                    nombre: insumoReal ? insumoReal.nombre : 'Insumo Eliminado', 
+                    entradas: 0, 
+                    salidas: 0,
+                    stockActual: insumoReal ? insumoReal.stockActual : 0
+                };
+            }
+            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += mov.cantidad;
+            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += mov.cantidad;
+        });
+
+        // Construir el reporte en texto para un Alert (o puedes mandarlo a un Modal)
+        let reporte = "📊 BALANCE DE INVENTARIO HOY\n\n";
+        let huboMovimientos = false;
+
+        for (const id in balance) {
+            huboMovimientos = true;
+            const b = balance[id];
+            reporte += `🔹 ${b.nombre}:\n`;
+            reporte += `   + Entró: ${b.entradas}\n`;
+            reporte += `   - Salió (Ventas/Merma): ${b.salidas}\n`;
+            reporte += `   = QUEDÓ EN BODEGA: ${b.stockActual}\n\n`;
+        }
+
+        if (!huboMovimientos) return alert("No se han registrado movimientos de inventario el día de hoy.");
+        alert(reporte);
+
+    } catch (error) {
+        console.error("Error al generar balance:", error);
     }
 };
