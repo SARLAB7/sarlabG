@@ -219,12 +219,9 @@ if(formInv) {
     formInv.onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('inv-id').value;
-        const btnSubmit = formInv.querySelector('button[type="submit"]');
-        const textoOriginal = btnSubmit.innerText;
-        
-        // Efecto visual de carga
-        btnSubmit.innerText = "Guardando...";
-        btnSubmit.disabled = true;
+        const btn = formInv.querySelector('button[type="submit"]');
+        const txtAnterior = btn.innerText;
+        btn.innerText = "Guardando..."; btn.disabled = true;
 
         const datos = {
             nombre: document.getElementById('inv-name').value,
@@ -235,74 +232,68 @@ if(formInv) {
             factor: Number(document.getElementById('inv-factor').value) || 1,
             lastUpdate: serverTimestamp()
         };
-        
         try {
             id ? await updateDoc(doc(db, "inventario", id), datos) : await addDoc(collection(db, "inventario"), datos);
-            
-            // Alerta de confirmación clara
-            alert(id ? "✅ Insumo actualizado correctamente." : "✅ Nuevo insumo guardado en la bodega.");
+            // USAMOS LA NOTIFICACIÓN NUEVA EN VEZ DEL ALERT
+            mostrarNotificacion(id ? "Insumo actualizado correctamente." : "Nuevo insumo guardado.", "success");
             window.cancelarEdicionInv();
-            
         } catch (error) { 
-            console.error("Error en inventario:", error); 
-            alert("❌ Hubo un problema de conexión al guardar.");
+            console.error(error); 
+            mostrarNotificacion("Hubo un error al guardar.", "error");
         } finally {
-            // Restaurar el botón
-            btnSubmit.innerText = textoOriginal;
-            btnSubmit.disabled = false;
+            btn.innerText = txtAnterior; btn.disabled = false;
         }
     };
 }
 
+// --- COMPRAS Y AUTO-CÁLCULO DE COSTO ---
 const formCompra = document.getElementById('f-compra');
+const inputCantCompra = document.getElementById('compra-cant');
+const selectInsumoCompra = document.getElementById('compra-insumo');
+const inputCostoCompra = document.getElementById('compra-costo');
+
+window.calcularCostoCompra = () => {
+    if (!inputCantCompra || !selectInsumoCompra || !inputCostoCompra) return;
+    const insumo = insumosGlobales.find(i => i.id === selectInsumoCompra.value);
+    const cant = Number(inputCantCompra.value);
+    
+    if (insumo && cant > 0) {
+        // Multiplica el costo unitario por lo que trae el empaque por los empaques comprados
+        const costoTotalEstimado = (Number(insumo.costoUnitario) || 0) * (Number(insumo.factor) || 1) * cant;
+        inputCostoCompra.value = Math.round(costoTotalEstimado); // Sin decimales
+    } else {
+        inputCostoCompra.value = '';
+    }
+};
+
+// Se ejecuta cada vez que cambias la cantidad o seleccionas otro insumo
+if (inputCantCompra) inputCantCompra.addEventListener('input', calcularCostoCompra);
+if (selectInsumoCompra) selectInsumoCompra.addEventListener('change', calcularCostoCompra);
+
 if (formCompra) {
     formCompra.onsubmit = async (e) => {
         e.preventDefault();
-        // --- AUTO-CALCULAR COSTO SUGERIDO EN COMPRAS ---
-const inputCant = document.getElementById('compra-cant');
-const selectInsumo = document.getElementById('compra-insumo');
-const inputCosto = document.getElementById('compra-costo');
+        const btn = formCompra.querySelector('button[type="submit"]');
+        btn.innerText = "Ingresando..."; btn.disabled = true;
 
-function autocompletarCosto() {
-    if (!inputCant || !selectInsumo || !inputCosto) return;
-    
-    // Buscamos cuál insumo seleccionó
-    const insumo = insumosGlobales.find(i => i.id === selectInsumo.value);
-    const paquetes = Number(inputCant.value);
-    
-    if (insumo && paquetes > 0) {
-        // Multiplicamos el costo de 1 unidad (ej. gramo) por lo que trae el empaque (factor)
-        const costoPorEmpaque = (Number(insumo.costoUnitario) || 0) * (Number(insumo.factor) || 1);
-        const totalEstimado = costoPorEmpaque * paquetes;
+        const idInsumo = selectInsumoCompra.value;
+        const paquetesRecibidos = Number(inputCantCompra.value);
+        const inversionTotal = Number(inputCostoCompra.value);
         
-        // Redondeamos para no tener decimales y lo ponemos en el input
-        inputCosto.value = Math.round(totalEstimado);
-    } else {
-        inputCosto.value = ''; // Limpiamos si borra la cantidad
-    }
-}
+        const inputCaducidad = document.getElementById('compra-caducidad');
+        const diasCaducidad = inputCaducidad ? inputCaducidad.value : null;
 
-// Escuchamos cuando el usuario escriba o cambie de insumo
-if (inputCant) inputCant.addEventListener('input', autocompletarCosto);
-if (selectInsumo) selectInsumo.addEventListener('change', autocompletarCosto);
-        const diasCaducidad = document.getElementById('compra-caducidad').value;
-let conceptoCompra = `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`;
-
-// Si puso días, lo agregamos al concepto para que quede en el historial
-if (diasCaducidad) {
-    const fechaVence = new Date();
-    fechaVence.setDate(fechaVence.getDate() + Number(diasCaducidad));
-    conceptoCompra += ` | ⚠️ Vence aprox: ${fechaVence.toLocaleDateString()}`;
-}
-
-// ... Y luego ese conceptoCompra es el que se guarda en el addDoc del kardex.
-        const idInsumo = document.getElementById('compra-insumo').value;
-        const paquetesRecibidos = Number(document.getElementById('compra-cant').value);
-        const inversionTotal = Number(document.getElementById('compra-costo').value);
         const datosInsumo = insumosGlobales.find(i => i.id === idInsumo);
         const contenidoPorEmpaque = Number(datosInsumo.factor) || 1;
         const cantidadTotalIngresada = paquetesRecibidos * contenidoPorEmpaque;
         const nuevoCostoUnitario = inversionTotal / cantidadTotalIngresada;
+
+        let conceptoCompra = `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`;
+        if (diasCaducidad) {
+            const fechaVence = new Date();
+            fechaVence.setDate(fechaVence.getDate() + Number(diasCaducidad));
+            conceptoCompra += ` | ⚠️ Vence aprox: ${fechaVence.toLocaleDateString()}`;
+        }
 
         try {
             await updateDoc(doc(db, "inventario", idInsumo), {
@@ -310,18 +301,17 @@ if (diasCaducidad) {
                 costoUnitario: nuevoCostoUnitario
             });
             await addDoc(collection(db, "kardex"), {
-                insumoId: idInsumo,
-                tipo: 'entrada',
-                concepto: `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`,
-                cantidad: cantidadTotalIngresada,
-                costoReferencia: inversionTotal,
-                timestamp: serverTimestamp()
+                insumoId: idInsumo, tipo: 'entrada', concepto: conceptoCompra, cantidad: cantidadTotalIngresada, costoReferencia: inversionTotal, timestamp: serverTimestamp()
             });
-            alert(`¡Ingreso exitoso! Se sumaron ${cantidadTotalIngresada.toLocaleString()} ${datosInsumo.unidad} a la bodega.`);
+            
+            // MENSAJE HERMOSO DE ÉXITO
+            mostrarNotificacion(`✅ Ingreso exitoso: +${cantidadTotalIngresada.toLocaleString()} ${datosInsumo.unidad}`);
             cerrarModales();
         } catch (error) {
-            console.error("Error al registrar la compra:", error);
-            alert("Hubo un problema al guardar la compra. Revisa la conexión.");
+            console.error(error);
+            mostrarNotificacion("❌ Error de red al registrar la compra.", "error");
+        } finally {
+            btn.innerText = "Ingresar"; btn.disabled = false;
         }
     };
 }
@@ -447,6 +437,27 @@ window.agregarFilaReceta = (insId = '', cant = '') => {
 };
 
 // --- 5. UTILIDADES Y GLOBALES ---
+// --- SISTEMA DE NOTIFICACIONES UI ---
+window.mostrarNotificacion = (mensaje, tipo = 'success') => {
+    const container = document.getElementById('iku-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    const color = tipo === 'success' ? '#10b981' : '#ef4444'; // Verde o Rojo
+    const icono = tipo === 'success' ? '✅' : '❌';
+    
+    toast.style = `background: var(--card-dark, #1e293b); border-left: 4px solid ${color}; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; transform: translateX(100%); transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0;`;
+    toast.innerHTML = `<span style="font-size: 1.2rem;">${icono}</span> <span>${mensaje}</span>`;
+    
+    container.appendChild(toast);
+    
+    // Animar entrada
+    setTimeout(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; }, 10);
+    // Animar salida y borrar
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)'; toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
 window.editarInsumo = (id, n, s, u, m, c, f) => {
     document.getElementById('inv-id').value = id;
     document.getElementById('inv-name').value = decodeURIComponent(n);
