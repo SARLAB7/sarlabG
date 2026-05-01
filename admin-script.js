@@ -166,8 +166,18 @@ window.irAPedido = (id) => {
 // --- 3. BODEGA, INVENTARIO Y KARDEX ---
 function escucharInventario() {
     onSnapshot(collection(db, "inventario"), (snap) => {
-        const lista = document.getElementById('lista-insumos');
-        if (!lista) return;
+        // Actualizamos la lista global
+        insumosGlobales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // Renderizamos ambas vistas
+        renderListaInsumosBento(); // La de las tarjetas (Configuración)
+        renderInventarioTable();   // La del Dashboard (Operación)
+        
+        actualizarSelectoresInsumos();
+    });
+}
+
+// ESTA FUNCIÓN VA AFUERA, SOLA:
 window.renderInventarioTable = () => {
     const tbody = document.getElementById('tabla-inventario-dinamica');
     if (!tbody) return;
@@ -180,43 +190,32 @@ window.renderInventarioTable = () => {
 
         const esBajoStock = Number(insumo.stockActual) <= Number(insumo.umbralMinimo);
         
-        // Estilo del Estado
-        const statusHTML = esBajoStock 
-            ? `<span class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">CRÍTICO</span>`
-            : `<span class="status-badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);">SALUDABLE</span>`;
+        const statusBadge = esBajoStock 
+            ? `<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.2);">STOCK BAJO</span>`
+            : `<span style="background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(34, 197, 94, 0.2);">SALUDABLE</span>`;
 
         html += `
             <tr class="row-hover" style="border-bottom: 1px solid var(--border);">
                 <td style="padding: 16px 20px;">
-                    <span style="font-family: monospace; color: var(--text-muted); font-size: 0.75rem;">
-                        #${insumo.id.substring(0,6).toUpperCase()}
-                    </span>
-                </td>
-                <td style="padding: 16px 20px;">
                     <div style="font-weight: 600; color: var(--white);">${insumo.nombre}</div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted); font-family: monospace;">SKU-${insumo.id.substring(0,6).toUpperCase()}</div>
                 </td>
-                <td style="padding: 16px 20px; color: var(--text-muted); font-size: 0.85rem;">
-                    ${insumo.unidad}
-                </td>
+                <td style="padding: 16px 20px; color: var(--text-muted); text-transform: capitalize;">${insumo.unidad}</td>
                 <td style="padding: 16px 20px; text-align: center;">
                     <input type="number" 
-                        class="table-input-stock"
                         value="${insumo.stockActual}" 
                         onchange="actualizarStockFisico('${insumo.id}', this.value, ${insumo.stockActual}, '${insumo.nombre}')"
-                        style="width: 70px;">
+                        style="background: #0f1115; border: 1px solid var(--border); color: var(--accent-yellow); text-align: center; width: 75px; padding: 5px; border-radius: 8px; font-weight: 800; margin-bottom: 0;">
+                </td>
+                <td style="padding: 16px 20px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                    ${insumo.unidad === 'gramos' ? 'Grs' : insumo.unidad === 'ml' ? 'Ml' : 'Und'}
                 </td>
                 <td style="padding: 16px 20px; color: var(--white); font-weight: 500;">
                     $${Math.round(insumo.costoUnitario || 0).toLocaleString()}
                 </td>
-                <td style="padding: 16px 20px; text-align: center;">
-                    ${statusHTML}
-                </td>
+                <td style="padding: 16px 20px; text-align: center;">${statusBadge}</td>
                 <td style="padding: 16px 20px; text-align: right;">
-                    <button onclick="verHistorialInsumo('${insumo.id}', '${insumo.nombre}')" 
-                        style="background:none; border:none; color:var(--accent-yellow); cursor:pointer; font-size: 1.1rem; opacity: 0.7; transition: 0.2s;"
-                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-                        🕒
-                    </button>
+                    <button onclick="verHistorialInsumo('${insumo.id}', '${insumo.nombre}')" style="background: none; border: none; color: var(--accent-yellow); cursor: pointer; font-size: 1.1rem; opacity: 0.6; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">🕒</button>
                 </td>
             </tr>
         `;
@@ -224,55 +223,6 @@ window.renderInventarioTable = () => {
 
     tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">No se encontraron insumos.</td></tr>';
 };
-
-// Función para el buscador
-window.filtrarInventarioTable = () => {
-    renderInventarioTable();
-};
-        // 1. EL FIX MÁGICO: Evita que el contenedor estire las tarjetas
-        lista.style.alignItems = 'start';
-        lista.style.gap = '16px'; 
-
-        insumosGlobales = [];
-        let htmlLista = '';
-        
-        snap.forEach(docSnap => {
-            const i = docSnap.data(); i.id = docSnap.id; insumosGlobales.push(i);
-            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
-            const colorCard = esCritico ? '#ef4444' : 'var(--border)';
-
-            // 2. DISEÑO CORREGIDO: Forzamos el fondo oscuro y la altura máxima
-            htmlLista += `
-                <div style="border: 1px solid ${colorCard}; background: var(--sidebar, #1e293b); border-radius: 16px; position: relative; padding: 20px; height: max-content; width: 100%; box-sizing: border-box;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px;">
-                        <span style="font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">
-                            ${i.unidad} ${i.factor ? `(F: ${i.factor})` : ''}
-                        </span>
-                        <div style="display:flex; gap:12px;">
-                            <button onclick="verHistorialInsumo('${i.id}', '${i.nombre}')" style="background:none; border:none; color:var(--accent-yellow); cursor:pointer;">🕒</button>
-                            <button onclick="eliminarInsumoModal('${i.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;">${ICON_TRASH}</button>
-                        </div>
-                    </div>
-                    <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario}, ${i.factor || 1})" style="cursor:pointer;">
-                        <strong style="font-size: 1.1rem; display: block; color: #ffffff;">
-    ${i.nombre} 
-    ${esCritico ? `<span style="background: #ef4444; color: white; font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; margin-left: 8px; vertical-align: middle; animation: pulse 2s infinite;">⚠️ BAJO STOCK</span>` : ''}
-</strong>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: ${esCritico ? '#ef4444' : '#ffffff'}; margin: 5px 0;">
-                            ${Number(i.stockActual).toLocaleString()}
-                        </div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">
-                           Costo Prom: $${Math.round(i.costoUnitario || 0).toLocaleString('es-CO')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Sin insumos.</p>';
-        actualizarSelectoresInsumos();
-    });
-}
 
 // --- SISTEMA DE NOTIFICACIONES ELEGANTE (INYECCIÓN AUTOMÁTICA) ---
 // Crea el contenedor de alertas mágicamente sin tocar el HTML
