@@ -72,7 +72,7 @@ function renderPedidosUI() {
                  <button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button>
                </div>` 
             : `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%;">${ICON_PREPARE} REVERTIR</button>`;
-        
+         
         card.innerHTML = `
             <div style="display:flex; justify-content:space-between;">
                 <strong>${p.cliente}</strong>
