@@ -116,7 +116,16 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
     border-color: var(--accent-yellow) !important;
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.15);
 }
+#busqueda-inventario {
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+}
 
+#busqueda-inventario:focus {
+    width: 320px; /* Se expande un poco al escribir */
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
+}
 /* Badges de estado */
 .status-badge {
     padding: 6px 12px;
