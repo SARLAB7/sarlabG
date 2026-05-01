@@ -3,9 +3,8 @@ import { collection, addDoc, onSnapshot, doc, query, orderBy, serverTimestamp } 
 
 // --- CONFIGURACIÓN Y ESTADO ---
 let carrito = [];
-const IKU_COORDS = {lat: 10.421639, lng: -73.688528 }; // pueblo bello cesar (cambiar ciudad coordenadas=
-const RADIO_MAXIMO_KM = 4; // abarcar totalidad en pueblo bello son 4 km
-
+const IKU_COORDS = { lat: 10.421639, lng: -73.688528 }; // Pueblo Bello, Cesar
+const RADIO_MAXIMO_KM = 4; 
 let ubicacionCliente = null;
 
 const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -25,6 +24,13 @@ document.addEventListener("DOMContentLoaded", () => {
         selectTipo.value = 'domicilio';
         selectTipo.disabled = true; 
         inputNombre.placeholder = "Nombre y Dirección exacta";
+        
+        if (checkWhatsapp) {
+            checkWhatsapp.checked = true;
+            checkWhatsapp.disabled = true;
+            const waContainer = checkWhatsapp.closest('.whatsapp-check');
+            if (waContainer) waContainer.style.opacity = "0.6"; 
+        }
         solicitarUbicacion();
     } else if (mesaParam) {
         selectTipo.value = 'mesa';
@@ -32,13 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
         inputNombre.readOnly = true;
         inputNombre.style.backgroundColor = "#1f222a";
     }
-    if (checkWhatsapp) {
-            checkWhatsapp.checked = true;    // Lo marcamos por defecto
-            checkWhatsapp.disabled = true;   // Impedimos que lo desmarquen
-            // Opcional: Ocultar el contenedor del check para que no estorbe
-            const waContainer = checkWhatsapp.closest('.whatsapp-check');
-            if (waContainer) waContainer.style.opacity = "0.6"; 
-        }
 });
 
 // --- GEOLOCALIZACIÓN Y RANGO ---
@@ -46,10 +45,8 @@ function solicitarUbicacion() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
             ubicacionCliente = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            // Ejecutar validación de inmediato
             validarRango(); 
         }, (err) => {
-            // Si niega el GPS en modo domicilio, bloqueamos el botón por precaución
             if(esDomicilioForzado) {
                 const btn = document.querySelector('.btn-send-order');
                 btn.disabled = true;
@@ -69,18 +66,20 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 }
 
 function validarRango() {
-    if (!ubicacionCliente) return true;
+    if (!ubicacionCliente) return false;
     const dist = calcularDistancia(IKU_COORDS.lat, IKU_COORDS.lng, ubicacionCliente.lat, ubicacionCliente.lng);
     
+    const btn = document.querySelector('.btn-send-order');
     if (dist > RADIO_MAXIMO_KM) {
-        const btn = document.querySelector('.btn-send-order');
-        // Cambiamos el texto aquí
-        alert(`Fuera de rango: Estás a ${dist.toFixed(1)}km. Solo entregamos en Medellín (máx ${RADIO_MAXIMO_KM}km).`);
+        alert(`Fuera de rango: Estás en Medellín (${dist.toFixed(1)}km). Solo entregamos en Pueblo Bello (máx ${RADIO_MAXIMO_KM}km).`);
         btn.disabled = true;
         btn.innerText = "FUERA DE COBERTURA";
         return false;
+    } else {
+        btn.disabled = false;
+        btn.innerText = "CONFIRMAR PEDIDO";
+        return true;
     }
-    return true;
 }
 
 // --- INTERFAZ Y CARRITO ---
@@ -141,19 +140,28 @@ function actualizarCarrito() {
 
 window.quitar = (i) => { carrito.splice(i, 1); actualizarCarrito(); };
 
-// --- ENVÍO DE PEDIDO (SISTEMA DUAL) ---
+// --- ENVÍO DE PEDIDO ---
 window.enviarPedido = async () => {
     const cliente = document.getElementById('nombre-cliente')?.value;
     const tipo = document.getElementById('tipo-servicio')?.value;
     const btn = document.querySelector('.btn-send-order');
 
+    // 1. VALIDACIONES BÁSICAS
     if (!cliente || carrito.length === 0) {
         btn.innerText = "Faltan datos ⚠️";
         setTimeout(() => btn.innerText = "CONFIRMAR PEDIDO", 2000);
         return;
     }
 
-    if (esDomicilioForzado && !validarRango()) return;
+    // 2. MURO DE SEGURIDAD PARA DOMICILIOS
+    if (esDomicilioForzado) {
+        if (!ubicacionCliente) {
+            alert("No hemos detectado tu ubicación GPS.");
+            solicitarUbicacion();
+            return;
+        }
+        if (!validarRango()) return; // Detiene el envío si está fuera de rango
+    }
 
     const total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
     const linkMapa = ubicacionCliente ? `%0A📍 *Ubicación GPS:* https://www.google.com/maps?q=${ubicacionCliente.lat},${ubicacionCliente.lng}` : "";
@@ -165,7 +173,7 @@ window.enviarPedido = async () => {
     msgWA += `--------------------------------%0A`;
     carrito.forEach(i => {
         msgWA += `*${i.cantidad}x* ${i.nombre}%0A`;
-        if(i.excluidos.length) msgWA += `   _SIN: ${i.excluidos.join(', ')}_%0A`;
+        if(i.excluidos.length) msgWA += `    _SIN: ${i.excluidos.join(', ')}_%0A`;
     });
     msgWA += `--------------------------------%0A`;
     msgWA += `*TOTAL:* $${total.toLocaleString()}${linkMapa}%0A%0A_Por favor, confirma para iniciar preparación._`;
@@ -185,7 +193,10 @@ window.enviarPedido = async () => {
         window.toggleCart();
         btn.innerText = "CONFIRMAR PEDIDO";
         iniciarTracker(docRef.id);
-    } catch (e) { btn.innerText = "Error ❌"; }
+    } catch (e) { 
+        console.error(e);
+        btn.innerText = "Error ❌"; 
+    }
 };
 
 // --- TRACKER Y CARGA DE MENÚ ---
