@@ -645,58 +645,108 @@ window.generarBalanceDiarioInventario = async () => {
         console.error("Error al generar balance:", error);
     }
 };
-// --- 7. SECCIÓN DE BALANCE DIARIO Y DESCARGA EXCEL ---
-let datosBalanceActual = []; // Guardamos los datos temporalmente para poder descargarlos
+// --- 7. SECCIÓN DE BALANCE DIARIO, DESCARGA Y AJUSTE MANUAL ---
+let datosBalanceActual = [];
+
+window.volverInventario = () => {
+    // Busca el botón del menú de inventario y lo clickea para volver suavemente
+    const btnInventario = Array.from(document.querySelectorAll('.nav-item')).find(el => el.innerText.includes('Inventario'));
+    if (btnInventario) btnInventario.click();
+};
+
+window.actualizarStockFisico = async (idInsumo, nuevoStock, stockAnterior, nombreInsumo) => {
+    const nuevoVal = Number(nuevoStock);
+    const viejoVal = Number(stockAnterior);
+
+    if (nuevoVal === viejoVal) return; // Si no escribes nada nuevo, no hace nada
+
+    const diferencia = nuevoVal - viejoVal;
+    const tipoAjuste = diferencia > 0 ? 'entrada' : 'salida';
+    
+    try {
+        // 1. Actualizamos el número en la base de datos
+        await updateDoc(doc(db, "inventario", idInsumo), { stockActual: nuevoVal });
+        
+        // 2. Guardamos el rastro del ajuste manual para auditoría
+        await addDoc(collection(db, "kardex"), { 
+            insumoId: idInsumo, 
+            tipo: tipoAjuste, 
+            concepto: `Ajuste Físico (Manual). Valor anterior: ${viejoVal}`, 
+            cantidad: Math.abs(diferencia), 
+            timestamp: serverTimestamp() 
+        });
+
+        mostrarNotificacion(`✅ Stock de ${nombreInsumo} ajustado a ${nuevoVal}`);
+        abrirSeccionBalance(); // Recarga los números para que todo cuadre visualmente
+
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion("❌ Error al actualizar el inventario", "error");
+        abrirSeccionBalance(); // Revierte el input si falla el internet
+    }
+};
 
 window.abrirSeccionBalance = async () => {
-    // 1. Ocultamos las demás secciones y mostramos esta
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
     document.getElementById('v-balance').classList.add('active');
     
     const tbody = document.getElementById('tabla-balance-seccion');
     if(!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance en vivo...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance e inventario físico...</td></tr>';
     
     const ahora = new Date();
-    // Forzamos la hora a las 00:00:00 para tomar todo el día completo
     const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
     
     try {
+        // Ahora cargamos TODOS los insumos primero, hayan tenido movimiento o no
+        let balance = {}; 
+        insumosGlobales.forEach(insumo => {
+            balance[insumo.id] = { 
+                nombre: insumo.nombre, 
+                entradas: 0, salidas: 0, 
+                stockActual: insumo.stockActual || 0, 
+                unidad: insumo.unidad || '', 
+                id: insumo.id, activo: true 
+            };
+        });
+
+        // Buscamos lo que pasó hoy y lo sumamos/restamos
         const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
         const snap = await getDocs(q);
         
-        let balance = {}; 
-        let huboMovimientos = false;
-        
         snap.forEach(d => {
-            huboMovimientos = true;
             const mov = d.data();
-            if (!balance[mov.insumoId]) {
-                const insumoReal = insumosGlobales.find(i => i.id === mov.insumoId);
+            if (balance[mov.insumoId]) {
+                if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += Number(mov.cantidad);
+                if (mov.tipo === 'salida') balance[mov.insumoId].salidas += Number(mov.cantidad);
+            } else {
+                // Para insumos que fueron borrados hoy pero dejaron rastro
                 balance[mov.insumoId] = { 
-                    nombre: insumoReal ? insumoReal.nombre : 'Insumo Eliminado', 
-                    entradas: 0, 
-                    salidas: 0,
-                    stockActual: insumoReal ? insumoReal.stockActual : 0,
-                    unidad: insumoReal ? insumoReal.unidad : ''
+                    nombre: 'Insumo Eliminado', 
+                    entradas: mov.tipo === 'entrada' ? Number(mov.cantidad) : 0, 
+                    salidas: mov.tipo === 'salida' ? Number(mov.cantidad) : 0,
+                    stockActual: 0, unidad: '', id: mov.insumoId, activo: false
                 };
             }
-            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += Number(mov.cantidad);
-            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += Number(mov.cantidad);
         });
 
-        if (!huboMovimientos) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">No se han registrado entradas ni salidas el día de hoy.</td></tr>';
-            datosBalanceActual = []; // Vaciamos para que no descargue basura
+        datosBalanceActual = Object.values(balance);
+
+        if (datosBalanceActual.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">No hay insumos en bodega.</td></tr>';
             return;
         }
 
-        // Preparamos los datos globales para el Excel
-        datosBalanceActual = Object.values(balance);
-
         let filasHTML = '';
         datosBalanceActual.forEach(b => {
+            const isEliminado = !b.activo;
+            
+            // LA MAGIA DE LA EDICIÓN: Creamos un input con colores llamativos para editar directamente
+            const celdaStockEditable = isEliminado 
+                ? `<span style="color: var(--danger)">Eliminado</span>` 
+                : `<input type="number" value="${b.stockActual}" onchange="actualizarStockFisico('${b.id}', this.value, ${b.stockActual}, '${b.nombre}')" style="width: 85px; padding: 6px; text-align: center; border-radius: 8px; border: 2px solid var(--border); background: #0f172a; color: var(--accent-yellow); font-weight: 800; font-size: 1.1rem; cursor: pointer;">`;
+
             filasHTML += `
                 <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
                     <td style="padding: 16px 12px; font-weight: 500; color: var(--white);">
@@ -708,8 +758,8 @@ window.abrirSeccionBalance = async () => {
                     <td style="padding: 16px 12px; text-align: center; color: #ef4444; font-weight: bold;">
                         ${b.salidas > 0 ? '-' : ''}${b.salidas.toLocaleString('es-CO')}
                     </td>
-                    <td style="padding: 16px 12px; text-align: right; font-weight: 800; color: var(--white); font-size: 1.1rem;">
-                        ${b.stockActual.toLocaleString('es-CO')}
+                    <td style="padding: 16px 12px; text-align: right;">
+                        ${celdaStockEditable}
                     </td>
                 </tr>
             `;
@@ -728,21 +778,16 @@ window.descargarBalanceCSV = () => {
         return;
     }
 
-    // Armamos el archivo Excel (formato CSV)
     let csvContent = "Insumo,Unidad,Entradas Hoy,Salidas Hoy,Stock Final en Bodega\n";
-    
     datosBalanceActual.forEach(b => {
-        // Envolvemos en comillas para evitar problemas con las comas en los nombres
         csvContent += `"${b.nombre}","${b.unidad}","${b.entradas}","${b.salidas}","${b.stockActual}"\n`;
     });
 
-    // Código mágico para forzar la descarga reconociendo las tildes (UTF-8 BOM)
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     
     const fechaActual = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
-    
     link.setAttribute("href", url);
     link.setAttribute("download", `Balance_Inventario_IKU_${fechaActual}.csv`);
     link.style.visibility = 'hidden';
