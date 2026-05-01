@@ -135,10 +135,18 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
     letter-spacing: 0.5px;
     display: inline-block;
 }
-.dashboard-table-container input:focus {
-    outline: none;
-    border-color: var(--accent-yellow) !important;
-    box-shadow: 0 0 8px rgba(255, 204, 0, 0.2);
+/* Mejora para el encabezado de la tabla de inventario */
+.dashboard-table-container thead tr {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(5px);
+    border-bottom: 2px solid var(--border) !important;
+}
+
+.dashboard-table-container th {
+    color: var(--accent-yellow) !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
 }
 /* =========================================
    COMPONENTES BENTO (TARJETAS)
