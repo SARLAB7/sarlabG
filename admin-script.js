@@ -606,20 +606,24 @@ window.generarBalanceDiarioInventario = async () => {
         console.error("Error al generar balance:", error);
     }
 };
-// --- 7. BALANCE DIARIO DE INVENTARIO ---
-window.generarBalanceDiarioInventario = async () => {
+// --- 7. SECCIÓN DE BALANCE DIARIO Y DESCARGA EXCEL ---
+let datosBalanceActual = []; // Guardamos los datos temporalmente para poder descargarlos
+
+window.abrirSeccionBalance = async () => {
+    // 1. Ocultamos las demás secciones y mostramos esta
+    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('v-balance').classList.add('active');
+    
+    const tbody = document.getElementById('tabla-balance-seccion');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance en vivo...</td></tr>';
+    
     const ahora = new Date();
-    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    // Forzamos la hora a las 00:00:00 para tomar todo el día completo
+    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
     
     try {
-        const tbody = document.getElementById('tabla-balance-body');
-        if(!tbody) return;
-        
-        // 1. Mostrar estado de carga y abrir el modal
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance en vivo...</td></tr>';
-        document.getElementById('modal-balance').style.display = 'flex';
-
-        // 2. Traer movimientos de HOY desde el Kardex
         const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
         const snap = await getDocs(q);
         
@@ -639,22 +643,24 @@ window.generarBalanceDiarioInventario = async () => {
                     unidad: insumoReal ? insumoReal.unidad : ''
                 };
             }
-            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += mov.cantidad;
-            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += mov.cantidad;
+            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += Number(mov.cantidad);
+            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += Number(mov.cantidad);
         });
 
-        // 3. Renderizar resultados en la tabla
         if (!huboMovimientos) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">No se han registrado entradas, ventas ni mermas el día de hoy.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">No se han registrado entradas ni salidas el día de hoy.</td></tr>';
+            datosBalanceActual = []; // Vaciamos para que no descargue basura
             return;
         }
 
+        // Preparamos los datos globales para el Excel
+        datosBalanceActual = Object.values(balance);
+
         let filasHTML = '';
-        for (const id in balance) {
-            const b = balance[id];
+        datosBalanceActual.forEach(b => {
             filasHTML += `
                 <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
-                    <td style="padding: 16px 12px; font-weight: 500;">
+                    <td style="padding: 16px 12px; font-weight: 500; color: var(--white);">
                         ${b.nombre} <br><span style="font-size:0.65rem; color:var(--text-muted); text-transform: uppercase;">${b.unidad}</span>
                     </td>
                     <td style="padding: 16px 12px; text-align: center; color: #22c55e; font-weight: bold;">
@@ -668,11 +674,40 @@ window.generarBalanceDiarioInventario = async () => {
                     </td>
                 </tr>
             `;
-        }
+        });
         tbody.innerHTML = filasHTML;
 
     } catch (error) {
-        console.error("Error al generar balance:", error);
-        document.getElementById('tabla-balance-body').innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--danger);">Hubo un error de conexión al cargar los datos.</td></tr>';
+        console.error("Detalle del error:", error);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--danger);">Error de conexión: ${error.message}</td></tr>`;
     }
+};
+
+window.descargarBalanceCSV = () => {
+    if (datosBalanceActual.length === 0) {
+        alert("No hay movimientos hoy para descargar.");
+        return;
+    }
+
+    // Armamos el archivo Excel (formato CSV)
+    let csvContent = "Insumo,Unidad,Entradas Hoy,Salidas Hoy,Stock Final en Bodega\n";
+    
+    datosBalanceActual.forEach(b => {
+        // Envolvemos en comillas para evitar problemas con las comas en los nombres
+        csvContent += `"${b.nombre}","${b.unidad}","${b.entradas}","${b.salidas}","${b.stockActual}"\n`;
+    });
+
+    // Código mágico para forzar la descarga reconociendo las tildes (UTF-8 BOM)
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    const fechaActual = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Balance_Inventario_IKU_${fechaActual}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 };
