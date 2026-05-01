@@ -9,6 +9,14 @@ SOUND_ADD.src = 'https://assets.mixkit.co/sfx/preview/mixkit-bubble-pop-up-alert
 SOUND_ADD.preload = 'auto';
 document.body.appendChild(SOUND_ADD);
 
+// CONFIGURACIÓN DE DOMICILIOS
+const IKU_COORDS = { lat: 10.4216, lng: -73.6885 }; // Pueblo Bello, Cesar
+const RADIO_MAXIMO_KM = 15; // Ajusta el radio de entrega aquí
+let ubicacionCliente = null;
+
+// DETECTAR MODO DOMICILIO POR URL (?tipo=domicilio)
+const params = new URLSearchParams(window.location.search);
+const esDomicilioForzado = params.get('tipo') === 'domicilio';
 // --- INICIALIZACIÓN ---
 document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
