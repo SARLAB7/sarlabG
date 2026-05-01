@@ -83,7 +83,10 @@
     </div>
     <div id="receta-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
 </div>
-                                <button type="submit" class="btn-action btn-primary">Guardar Plato</button>
+                                <div style="display: flex; gap: 10px;">
+    <button type="submit" class="btn-action btn-primary" style="flex: 2;">Guardar Plato</button>
+    <button type="button" id="btn-cancelar" onclick="window.cancelarEdicion()" style="display: none; flex: 1; background: var(--danger); color: white;" class="btn-action">✕</button>
+</div>
                             </form>
                         </div>
                     </div>
