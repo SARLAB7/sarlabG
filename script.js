@@ -3,7 +3,7 @@ import { collection, addDoc, onSnapshot, doc, query, orderBy, serverTimestamp } 
 
 // --- CONFIGURACIÓN Y ESTADO ---
 let carrito = [];
-const IKU_COORDS = {lat: 10.421639, lng: -73.688528 }; // Coordenadas centrales de Medellín
+const IKU_COORDS = {lat: 10.421639, lng: -73.688528 }; // pueblo bello cesar (cambiar ciudad coordenadas=
 const RADIO_MAXIMO_KM = 10; // Ponle 10km para abarcar gran parte de la ciudad en tu prueba
 let ubicacionCliente = null;
 
