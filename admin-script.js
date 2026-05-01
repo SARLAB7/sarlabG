@@ -168,7 +168,53 @@ function escucharInventario() {
     onSnapshot(collection(db, "inventario"), (snap) => {
         const lista = document.getElementById('lista-insumos');
         if (!lista) return;
+window.renderInventarioTable = () => {
+    const tbody = document.getElementById('tabla-inventario-dinamica');
+    if (!tbody) return;
 
+    const busqueda = document.getElementById('busqueda-inventario')?.value.toLowerCase() || "";
+    
+    let html = '';
+    insumosGlobales.forEach(insumo => {
+        if (busqueda && !insumo.nombre.toLowerCase().includes(busqueda)) return;
+
+        const esBajoStock = Number(insumo.stockActual) <= Number(insumo.umbralMinimo);
+        
+        // Estilo del Estado (Status) como en la imagen
+        const statusBadge = esBajoStock 
+            ? `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">STOCK BAJO</span>`
+            : `<span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(34, 197, 94, 0.3);">SALUDABLE</span>`;
+
+        html += `
+            <tr class="row-hover" style="border-bottom: 1px solid var(--border); transition: 0.2s;">
+                <td style="padding: 16px 20px;">
+                    <div style="font-weight: 600; color: var(--white);">${insumo.nombre}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">SKU: ${insumo.id.substring(0,6).toUpperCase()}</div>
+                </td>
+                <td style="padding: 16px 20px; color: var(--text-muted); text-transform: capitalize;">${insumo.unidad}</td>
+                <td style="padding: 16px 20px; text-align: center;">
+                    <input type="number" 
+                        value="${insumo.stockActual}" 
+                        onchange="actualizarStockFisico('${insumo.id}', this.value, ${insumo.stockActual}, '${insumo.nombre}')"
+                        style="background: #0f172a; border: 1px solid var(--border); color: var(--accent-yellow); text-align: center; width: 80px; padding: 5px; border-radius: 8px; font-weight: 800;">
+                </td>
+                <td style="padding: 16px 20px; text-align: center; color: var(--text-muted);">${insumo.unidad === 'gramos' ? 'Grs' : insumo.unidad === 'ml' ? 'Ml' : 'Und'}</td>
+                <td style="padding: 16px 20px; color: var(--white);">$${Math.round(insumo.costoUnitario || 0).toLocaleString()}</td>
+                <td style="padding: 16px 20px; text-align: center;">${statusBadge}</td>
+                <td style="padding: 16px 20px; text-align: right;">
+                    <button onclick="verHistorialInsumo('${insumo.id}', '${insumo.nombre}')" style="background: none; border: none; color: var(--accent-yellow); cursor: pointer; font-size: 1.2rem;">🕒</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">No se encontraron insumos.</td></tr>';
+};
+
+// Función para el buscador
+window.filtrarInventarioTable = () => {
+    renderInventarioTable();
+};
         // 1. EL FIX MÁGICO: Evita que el contenedor estire las tarjetas
         lista.style.alignItems = 'start';
         lista.style.gap = '16px'; 
