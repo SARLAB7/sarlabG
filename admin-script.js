@@ -1,9 +1,14 @@
 import { db, auth } from './firebase-config.js';
-import { collection, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+import { 
+    collection, onSnapshot, query, orderBy, doc, 
+    deleteDoc, updateDoc, serverTimestamp, addDoc, increment 
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { 
+    GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut 
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
 // --- ESTADO GLOBAL ---
-let categoriasAbiertas = new Set(); // Guarda qué categorías están desplegadas
+let categoriasAbiertas = new Set();
 let menuGlobal = {}, pedidosGlobales = [], idParaEliminar = null;
 
 const CORREO_MASTER = "cb01grupo@gmail.com";
@@ -15,7 +20,7 @@ const ICON_X = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stro
 const ICON_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-// --- AUTENTICACIÓN ---
+// --- 1. AUTENTICACIÓN ---
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 
@@ -27,7 +32,11 @@ onAuthStateChanged(auth, (u) => {
         document.getElementById('admin-panel').style.display = 'flex';
         document.getElementById('login-screen').style.display = 'none';
         if(u.email === CORREO_MASTER) document.getElementById('master-tools').style.display = 'block';
-        escucharCarta(); escucharPedidos(); escucharInventario();
+        
+        // Iniciar Listeners
+        escucharCarta(); 
+        escucharPedidos(); 
+        escucharInventario();
     } else {
         if(u) signOut(auth);
         document.getElementById('admin-panel').style.display = 'none';
@@ -35,26 +44,100 @@ onAuthStateChanged(auth, (u) => {
     }
 });
 
-// --- LÓGICA DE ACORDEONES (PERSISTENTE) ---
-window.toggleCategoria = (listaId, chevronId) => {
-    const l = document.getElementById(listaId);
-    const c = document.getElementById(chevronId);
+// --- 2. GESTIÓN DE INVENTARIO (BODEGA) ---
+function escucharInventario() {
+    onSnapshot(collection(db, "inventario"), (snap) => {
+        const lista = document.getElementById('lista-insumos');
+        const alertasCocina = document.getElementById('notificaciones-cocina');
+        if (!lista) return;
+
+        let htmlLista = '';
+        let htmlAlertas = '';
+
+        snap.forEach(docSnap => {
+            const i = docSnap.data();
+            i.id = docSnap.id;
+            
+            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
+            const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
+            const bgCard = esCritico ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-dark)';
+
+            htmlLista += `
+                <div class="stat-card" style="border: 1px solid ${colorCard}; background: ${bgCard}; cursor: pointer;" 
+                     onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unidad}</span>
+                        ${esCritico ? '<span style="color:var(--danger); font-size:1.2rem;">⚠️</span>' : ''}
+                    </div>
+                    <strong style="font-size: 1.2rem; display: block; margin: 5px 0;">${i.nombre}</strong>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: ${esCritico ? 'var(--danger)' : 'var(--white)'};">
+                        ${i.stockActual} 
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
+                        Costo: $${Number(i.costoUnitario).toLocaleString()} | Min: ${i.umbralMinimo}
+                    </div>
+                </div>
+            `;
+
+            if (esCritico) {
+                htmlAlertas += `
+                    <div style="background: var(--danger); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; animation: pulse 2s infinite;">
+                        <span><strong>¡AGOTÁNDOSE!</strong> Se requiere ${i.nombre.toUpperCase()} (Quedan: ${i.stockActual})</span>
+                        <button onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\\'v-inventario\\']'))" style="background: white; color: var(--danger); border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem;">ABASTECER</button>
+                    </div>
+                `;
+            }
+        });
+
+        lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Bodega vacía.</p>';
+        if (alertasCocina) alertasCocina.innerHTML = htmlAlertas;
+    });
+}
+
+window.editarInsumo = (id, n, s, u, m, c) => {
+    document.getElementById('inv-id').value = id;
+    document.getElementById('inv-name').value = decodeURIComponent(n);
+    document.getElementById('inv-stock').value = s;
+    document.getElementById('inv-unit').value = u;
+    document.getElementById('inv-min').value = m;
+    document.getElementById('inv-cost').value = c;
     
-    if(l) {
-        l.classList.toggle('lista-categoria-oculta');
-        // Guardar o quitar del Set de abiertas
-        if (!l.classList.contains('lista-categoria-oculta')) {
-            categoriasAbiertas.add(listaId);
-        } else {
-            categoriasAbiertas.delete(listaId);
-        }
-    }
-    if(c) {
-        c.style.transform = l.classList.contains('lista-categoria-oculta') ? 'rotate(0deg)' : 'rotate(180deg)';
-    }
+    document.getElementById('f-inv-title').innerText = "Actualizando Insumo";
+    document.getElementById('btn-cancelar-inv').style.display = 'block';
+    document.querySelector('#v-inventario .form-container').scrollIntoView({ behavior: 'smooth' });
 };
 
-// --- GESTIÓN DE CARTA ---
+window.cancelarEdicionInv = () => {
+    document.getElementById('inv-form').reset();
+    document.getElementById('inv-id').value = '';
+    document.getElementById('f-inv-title').innerText = "Configurar Insumo";
+    document.getElementById('btn-cancelar-inv').style.display = 'none';
+};
+
+// FIX: Captura correcta del submit para evitar recarga
+const formInv = document.getElementById('inv-form');
+if(formInv) {
+    formInv.onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('inv-id').value;
+        const datos = {
+            nombre: document.getElementById('inv-name').value,
+            stockActual: Number(document.getElementById('inv-stock').value),
+            unidad: document.getElementById('inv-unit').value,
+            umbralMinimo: Number(document.getElementById('inv-min').value),
+            costoUnitario: Number(document.getElementById('inv-cost').value),
+            lastUpdate: serverTimestamp()
+        };
+
+        try {
+            id ? await updateDoc(doc(db, "inventario", id), datos) 
+               : await addDoc(collection(db, "inventario"), datos);
+            window.cancelarEdicionInv();
+        } catch (error) { console.error("Error en bodega:", error); }
+    };
+}
+
+// --- 3. GESTIÓN DE CARTA ---
 function escucharCarta() {
     onSnapshot(collection(db, "platos"), (snap) => {
         const list = document.getElementById('inv-list'); 
@@ -80,8 +163,7 @@ function escucharCarta() {
         let h = '';
         for (const k in cats) {
             if (cats[k].platos.length === 0) continue;
-            const catId = `cat-${k}`;
-            const chevId = `chev-${k}`;
+            const catId = `cat-${k}`, chevId = `chev-${k}`;
 
             let ph = cats[k].platos.map(it => `
                 <div style="background:white; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
@@ -115,104 +197,13 @@ function escucharCarta() {
         }
         list.innerHTML = h;
 
-        // --- RESTAURAR ESTADO DE ACORDEONES ---
         categoriasAbiertas.forEach(id => {
-            const el = document.getElementById(id);
-            const chev = document.getElementById(id.replace('cat-', 'chev-'));
-            if (el) {
-                el.classList.remove('lista-categoria-oculta');
-                if (chev) chev.style.transform = 'rotate(180deg)';
-            }
+            const el = document.getElementById(id), chev = document.getElementById(id.replace('cat-', 'chev-'));
+            if (el) { el.classList.remove('lista-categoria-oculta'); if (chev) chev.style.transform = 'rotate(180deg)'; }
         });
     });
 }
-// --- GESTIÓN DE INVENTARIO ---
 
-function escucharInventario() {
-    onSnapshot(collection(db, "inventario"), (snap) => {
-        const lista = document.getElementById('lista-insumos');
-        const alertasCocina = document.getElementById('notificaciones-cocina');
-        if (!lista) return;
-
-        let htmlLista = '';
-        let htmlAlertas = '';
-
-        snap.forEach(docSnap => {
-            const i = docSnap.data();
-            i.id = docSnap.id;
-            
-            // Determinar si el stock es crítico
-            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
-            const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
-            const bgCard = esCritico ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-dark)';
-
-            // 1. Construir la tarjeta Bento
-            htmlLista += `
-                <div class="stat-card" style="border: 1px solid ${colorCard}; background: ${bgCard}; cursor: pointer;" 
-                     onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unidad}</span>
-                        ${esCritico ? '<span style="color:var(--danger); font-size:1.2rem;">⚠️</span>' : ''}
-                    </div>
-                    <strong style="font-size: 1.2rem; display: block; margin: 5px 0;">${i.nombre}</strong>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: ${esCritico ? 'var(--danger)' : 'var(--white)'};">
-                        ${i.stockActual} 
-                    </div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
-                        Costo: $${Number(i.costoUnitario).toLocaleString()} | Min: ${i.umbralMinimo}
-                    </div>
-                </div>
-            `;
-
-            // 2. Si es crítico, generar banner para el monitor de pedidos
-            if (esCritico) {
-                htmlAlertas += `
-                    <div style="background: var(--danger); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; animation: pulse 2s infinite;">
-                        <span><strong>¡AGOTÁNDOSE!</strong> Se requiere ${i.nombre.toUpperCase()} (Quedan: ${i.stockActual})</span>
-                        <button onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\\'v-inventario\\']'))" style="background: white; color: var(--danger); border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem;">ABASTECER</button>
-                    </div>
-                `;
-            }
-        });
-
-        lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Bodega vacía.</p>';
-        if (alertasCocina) alertasCocina.innerHTML = htmlAlertas;
-    });
-}
-// --- GESTIÓN DE PEDIDOS ---
-function escucharPedidos() {
-    onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
-        pedidosGlobales = [];
-        const lp = document.getElementById('l-pendientes'), la = document.getElementById('l-atendidos');
-        if(!lp || !la) return;
-        lp.innerHTML = ''; la.innerHTML = '';
-        
-        snap.docs.forEach(docSnap => {
-            const p = docSnap.data(); p.id = docSnap.id;
-            pedidosGlobales.push(p);
-            if (p.estado === 'rechazado') return;
-
-            const card = document.createElement('div');
-            card.className = `pedido-card ${p.estado}`;
-            card.id = `card-${p.id}`;
-            
-            let botonesAccion = '';
-            if (p.estado === 'pendiente') {
-                botonesAccion = `<div style="display:flex; gap:8px;"><button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:3; background:var(--sidebar); color:var(--accent); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; gap:8px;">${ICON_PREPARE} PREPARAR</button><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="background:#f9fafb; color:#ef4444; border:1px solid #fee2e2; flex:1; display:flex; align-items:center; justify-content:center;">${ICON_X}</button></div>`;
-            } else if (p.estado === 'preparando') {
-                botonesAccion = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-bottom:8px;"><button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button><button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button><button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button></div><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="width:100%; background:#f9fafb; color:#ef4444; font-size:0.7rem;">${ICON_X} RECHAZAR PEDIDO</button>`;
-            } else {
-                botonesAccion = `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%; font-size:0.8rem;">${ICON_PREPARE} REVERTIR Y REASIGNAR</button>`;
-            }
-
-            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;"><div><strong style="font-size: 1.1rem;">${p.cliente}</strong><div style="font-size:0.85rem; color:var(--text-muted);">${p.tipo} - $${Number(p.total).toLocaleString()}</div></div><button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size: 0.8rem;">🖨️</button></div><div style="margin-bottom:15px; padding-left:10px; border-left:2px solid var(--border);">${p.items.map(i => `<div style="font-size:0.95rem;">• 1x ${i.nombre} ${i.excluidos?.length > 0 ? `<span style="color:var(--danger); font-size:0.8rem;">(SIN: ${i.excluidos.join(', ')})</span>` : ''}</div>`).join('')}</div><div class="acciones-pedido">${botonesAccion}</div>`;
-            if (p.estado === 'listo') la.appendChild(card); else lp.appendChild(card);
-        });
-        actualizarMétricas(); renderizarPlanoMesas(pedidosGlobales);
-    });
-}
-
-// --- FORMULARIO Y EDICIÓN ---
 window.editarPlato = (id, n, p, c, d, i) => {
     document.getElementById('edit-id').value = id; 
     document.getElementById('name').value = decodeURIComponent(n); 
@@ -248,120 +239,53 @@ document.getElementById('m-form').onsubmit = async (e) => {
     window.cancelarEdicion();
 };
 
-// --- MÉTRICAS ---
-window.actualizarMétricas = function() {
-    let tVentas = 0, tMes = 0, pedidosContados = 0, rechazadosContados = 0, valorRechazados = 0;
-    let tNequi = 0, tBanco = 0, tEfectivo = 0;
-    const ventasPlatos = {}, usoIngredientes = {}; 
-    const ahora = new Date();
-    const filtro = document.getElementById('periodo-selector')?.value || 'hoy';
+// --- 4. GESTIÓN DE PEDIDOS ---
+function escucharPedidos() {
+    onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
+        pedidosGlobales = [];
+        const lp = document.getElementById('l-pendientes'), la = document.getElementById('l-atendidos');
+        if(!lp || !la) return;
+        lp.innerHTML = ''; la.innerHTML = '';
+        
+        snap.docs.forEach(docSnap => {
+            const p = docSnap.data(); p.id = docSnap.id;
+            pedidosGlobales.push(p);
+            if (p.estado === 'rechazado') return;
 
-    pedidosGlobales.forEach(p => {
-        if(!p.timestamp) return;
-        const f = p.timestamp.toDate();
-        let cumpleFiltro = false;
-        const esMismoDia = f.getDate() === ahora.getDate() && f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
-
-        if (filtro === 'hoy') cumpleFiltro = esMismoDia;
-        else if (filtro === 'semana') {
-            const hace7 = new Date(); hace7.setDate(ahora.getDate() - 7);
-            cumpleFiltro = f >= hace7;
-        } else if (filtro === 'mes') {
-            cumpleFiltro = f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
-        } else if (filtro === 'total') cumpleFiltro = true;
-
-        if(cumpleFiltro) {
-            if(p.estado === 'rechazado') {
-                rechazadosContados++; valorRechazados += Number(p.total);
+            const card = document.createElement('div');
+            card.className = `pedido-card ${p.estado}`;
+            card.id = `card-${p.id}`;
+            
+            let botonesAccion = '';
+            if (p.estado === 'pendiente') {
+                botonesAccion = `<div style="display:flex; gap:8px;"><button onclick="actualizarEstado('${p.id}', 'preparando')" class="btn-estado btn-preparar" style="flex:3; background:var(--sidebar); color:var(--accent); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; gap:8px;">${ICON_PREPARE} PREPARAR</button><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="background:#f9fafb; color:#ef4444; border:1px solid #fee2e2; flex:1; display:flex; align-items:center; justify-content:center;">${ICON_X}</button></div>`;
+            } else if (p.estado === 'preparando') {
+                botonesAccion = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-bottom:8px;"><button onclick="cerrarPedido('${p.id}', 'nequi')" class="btn-pago nequi">NEQUI</button><button onclick="cerrarPedido('${p.id}', 'banco')" class="btn-pago banco">BANCO</button><button onclick="cerrarPedido('${p.id}', 'efectivo')" class="btn-pago efectivo">EFECTIVO</button></div><button onclick="rechazarPedido('${p.id}')" class="btn-action" style="width:100%; background:#f9fafb; color:#ef4444; font-size:0.7rem;">${ICON_X} RECHAZAR PEDIDO</button>`;
             } else {
-                tVentas += Number(p.total); pedidosContados++;
-                if(p.metodoPago === 'nequi') tNequi += Number(p.total);
-                if(p.metodoPago === 'banco') tBanco += Number(p.total);
-                if(p.metodoPago === 'efectivo') tEfectivo += Number(p.total);
-                p.items.forEach(item => {
-                    ventasPlatos[item.nombre] = (ventasPlatos[item.nombre] || 0) + 1;
-                    const ingBase = menuGlobal[item.nombre] || [];
-                    const excluidos = item.excluidos || [];
-                    ingBase.forEach(ing => { if (!excluidos.includes(ing)) usoIngredientes[ing] = (usoIngredientes[ing] || 0) + 1; });
-                });
+                botonesAccion = `<button onclick="revertirPedido('${p.id}')" class="btn-action btn-outline" style="width:100%; font-size:0.8rem;">${ICON_PREPARE} REVERTIR Y REASIGNAR</button>`;
             }
-        }
-        if(f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear() && p.estado !== 'rechazado') {
-            tMes += Number(p.total);
-        }
+
+            card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px;"><div><strong style="font-size: 1.1rem;">${p.cliente}</strong><div style="font-size:0.85rem; color:var(--text-muted);">${p.tipo} - $${Number(p.total).toLocaleString()}</div></div><button onclick="imprimirComanda('${encodeURIComponent(JSON.stringify(p))}')" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size: 0.8rem;">🖨️</button></div><div style="margin-bottom:15px; padding-left:10px; border-left:2px solid var(--border);">${p.items.map(i => `<div style="font-size:0.95rem;">• 1x ${i.nombre} ${i.excluidos?.length > 0 ? `<span style="color:var(--danger); font-size:0.8rem;">(SIN: ${i.excluidos.join(', ')})</span>` : ''}</div>`).join('')}</div><div class="acciones-pedido">${botonesAccion}</div>`;
+            if (p.estado === 'listo') la.appendChild(card); else lp.appendChild(card);
+        });
+        actualizarMétricas(); renderizarPlanoMesas(pedidosGlobales);
     });
+}
 
-    const setUI = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
-    setUI('s-hoy', `$${tVentas.toLocaleString()}`);
-    setUI('s-pedidos-total', pedidosContados);
-    setUI('s-mes', `$${tMes.toLocaleString()}`);
-    setUI('s-nequi', `$${tNequi.toLocaleString()}`);
-    setUI('s-bancolombia', `$${tBanco.toLocaleString()}`);
-    setUI('s-efectivo', `$${tEfectivo.toLocaleString()}`);
-
-    const rRechazados = document.getElementById('rankings-rechazados');
-    if(rRechazados) {
-        rRechazados.innerHTML = `<div style="width:100%; padding:20px; background:white; border-radius:12px; border:1px solid #f3f4f6; display:flex; align-items:center; gap:15px;"><div style="background:#fff1f2; padding:12px; border-radius:10px; color:#e11d48;">${ICON_X}</div><div style="text-align:left;"><div style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-transform:uppercase;">Pérdidas Periodo</div><strong style="font-size:1.4rem;">$${valorRechazados.toLocaleString()}</strong><div style="font-size:0.8rem; color:#be123c;">${rechazadosContados} pedidos cancelados</div></div></div>`;
+// --- 5. UI Y UTILIDADES (ACORDEONES, MODALES, MESAS) ---
+window.toggleCategoria = (listaId, chevronId) => {
+    const l = document.getElementById(listaId), c = document.getElementById(chevronId);
+    if(l) {
+        l.classList.toggle('lista-categoria-oculta');
+        !l.classList.contains('lista-categoria-oculta') ? categoriasAbiertas.add(listaId) : categoriasAbiertas.delete(listaId);
     }
-
-    const rPlatos = document.getElementById('rankings-categoria');
-    if(rPlatos) {
-        const sorted = Object.entries(ventasPlatos).sort((a,b) => b[1] - a[1]).slice(0,5);
-        rPlatos.innerHTML = sorted.map(([n,v]) => `<div style="padding:10px; background:#f9fafb; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between;"><span>${n}</span> <strong>${v}</strong></div>`).join('') || "Sin datos";
-    }
-
-    const rIng = document.getElementById('rankings-ingredientes');
-    if(rIng) {
-        const sortedIng = Object.entries(usoIngredientes).sort((a,b) => b[1] - a[1]);
-        rIng.innerHTML = sortedIng.map(([n,v]) => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${n} (${v})</span>`).join('') || "Sin datos";
-    }
-};
-// --- FUNCIONES DEL FORMULARIO DE INVENTARIO ---
-
-window.editarInsumo = (id, n, s, u, m, c) => {
-    document.getElementById('inv-id').value = id;
-    document.getElementById('inv-name').value = decodeURIComponent(n);
-    document.getElementById('inv-stock').value = s;
-    document.getElementById('inv-unit').value = u;
-    document.getElementById('inv-min').value = m;
-    document.getElementById('inv-cost').value = c;
-    
-    document.getElementById('f-inv-title').innerText = "Actualizando Insumo";
-    document.getElementById('btn-cancelar-inv').style.display = 'block';
-    document.querySelector('#v-inventario .form-container').scrollIntoView({ behavior: 'smooth' });
+    if(c) c.style.transform = l.classList.contains('lista-categoria-oculta') ? 'rotate(0deg)' : 'rotate(180deg)';
 };
 
-window.cancelarEdicionInv = () => {
-    document.getElementById('inv-form').reset();
-    document.getElementById('inv-id').value = '';
-    document.getElementById('f-inv-title').innerText = "Configurar Insumo";
-    document.getElementById('btn-cancelar-inv').style.display = 'none';
-};
-
-document.getElementById('inv-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('inv-id').value;
-    const datos = {
-        nombre: document.getElementById('inv-name').value,
-        stockActual: Number(document.getElementById('inv-stock').value),
-        unidad: document.getElementById('inv-unit').value,
-        umbralMinimo: Number(document.getElementById('inv-min').value),
-        costoUnitario: Number(document.getElementById('inv-cost').value),
-        lastUpdate: serverTimestamp()
-    };
-
-    try {
-        id ? await updateDoc(doc(db, "inventario", id), datos) 
-           : await addDoc(collection(db, "inventario"), datos);
-        window.cancelarEdicionInv();
-    } catch (error) {
-        console.error("Error en bodega:", error);
-    }
-};
-// --- ESTADOS Y ACCIONES ---
 window.actualizarEstado = async (id, estado) => await updateDoc(doc(db, "pedidos", id), { estado });
 window.cerrarPedido = async (id, m) => await updateDoc(doc(db, "pedidos", id), { estado: 'listo', metodoPago: m });
 window.revertirPedido = async (id) => await updateDoc(doc(db, "pedidos", id), { estado: 'preparando', metodoPago: null });
+
 window.rechazarPedido = (id) => { idParaEliminar = "RECHAZAR:" + id; document.getElementById('modal-title').innerHTML = `<span style="color:var(--danger)">¿Rechazar pedido?</span>`; document.getElementById('delete-modal').style.display = 'flex'; };
 window.eliminarPlatoModal = (id) => { idParaEliminar = id; document.getElementById('modal-title').innerText = '¿Borrar plato?'; document.getElementById('delete-modal').style.display = 'flex'; };
 window.confirmarReinicioTotal = () => { idParaEliminar = "MASTER"; document.getElementById('modal-title').innerText = '¿REINICIAR TODO?'; document.getElementById('delete-modal').style.display = 'flex'; };
@@ -380,15 +304,6 @@ if(btnConfirmar) {
     };
 }
 
-// --- NAVEGACIÓN Y MESAS ---
-window.irAPedido = (id) => {
-    document.querySelector('[onclick*="v-pedidos"]').click();
-    setTimeout(() => {
-        const el = document.getElementById(`card-${id}`);
-        if(el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.border = "2px solid var(--accent)"; setTimeout(() => el.style.border = "none", 2000); }
-    }, 200);
-};
-
 window.renderizarPlanoMesas = (ps) => {
     const g = document.getElementById('grid-mesas'); if(!g) return;
     const mas = ps.filter(p => p.estado !== 'listo' && p.estado !== 'rechazado' && p.cliente.toLowerCase().includes('mesa'));
@@ -400,10 +315,58 @@ window.renderizarPlanoMesas = (ps) => {
     g.innerHTML = h;
 };
 
-// --- IMPRESIÓN ---
+window.irAPedido = (id) => {
+    document.querySelector('[onclick*="v-pedidos"]').click();
+    setTimeout(() => {
+        const el = document.getElementById(`card-${id}`);
+        if(el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.border = "2px solid var(--accent)"; setTimeout(() => el.style.border = "none", 2000); }
+    }, 200);
+};
+
 window.imprimirComanda = (ps) => {
     const p = JSON.parse(decodeURIComponent(ps));
     const div = document.createElement('div');
     div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><p><strong>Fecha:</strong> ${new Date().toLocaleString()}</p><hr><ul style="list-style:none; padding:0;">${p.items.map(i => `<li><strong style="font-size:1.1rem;">1x ${i.nombre}</strong> ${i.excluidos?.length > 0 ? `<br><small style="color:red; font-weight:bold;">- Sin: ${i.excluidos.join(', ')}</small>` : ''}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`;
     document.body.appendChild(div); window.print(); document.body.removeChild(div);
+};
+
+// --- 6. MÉTRICAS ---
+window.actualizarMétricas = function() {
+    let tVentas = 0, tMes = 0, pedidosContados = 0, rechazadosContados = 0, valorRechazados = 0, tNequi = 0, tBanco = 0, tEfectivo = 0;
+    const ventasPlatos = {}, usoIngredientes = {}, ahora = new Date(), filtro = document.getElementById('periodo-selector')?.value || 'hoy';
+
+    pedidosGlobales.forEach(p => {
+        if(!p.timestamp) return;
+        const f = p.timestamp.toDate(), esMismoDia = f.getDate() === ahora.getDate() && f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
+        let cumpleFiltro = filtro === 'hoy' ? esMismoDia : filtro === 'semana' ? f >= (new Date().setDate(ahora.getDate()-7)) : filtro === 'mes' ? (f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear()) : true;
+
+        if(cumpleFiltro) {
+            if(p.estado === 'rechazado') { rechazadosContados++; valorRechazados += Number(p.total); }
+            else {
+                tVentas += Number(p.total); pedidosContados++;
+                if(p.metodoPago === 'nequi') tNequi += Number(p.total);
+                if(p.metodoPago === 'banco') tBanco += Number(p.total);
+                if(p.metodoPago === 'efectivo') tEfectivo += Number(p.total);
+                p.items.forEach(item => {
+                    ventasPlatos[item.nombre] = (ventasPlatos[item.nombre] || 0) + 1;
+                    const ingBase = menuGlobal[item.nombre] || [], excluidos = item.excluidos || [];
+                    ingBase.forEach(ing => { if (!excluidos.includes(ing)) usoIngredientes[ing] = (usoIngredientes[ing] || 0) + 1; });
+                });
+            }
+        }
+        if(f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear() && p.estado !== 'rechazado') tMes += Number(p.total);
+    });
+
+    const setUI = (id, val) => { if(document.getElementById(id)) document.getElementById(id).innerText = val; };
+    setUI('s-hoy', `$${tVentas.toLocaleString()}`); setUI('s-pedidos-total', pedidosContados); setUI('s-mes', `$${tMes.toLocaleString()}`);
+    setUI('s-nequi', `$${tNequi.toLocaleString()}`); setUI('s-bancolombia', `$${tBanco.toLocaleString()}`); setUI('s-efectivo', `$${tEfectivo.toLocaleString()}`);
+
+    const rRechazados = document.getElementById('rankings-rechazados');
+    if(rRechazados) rRechazados.innerHTML = `<div style="width:100%; padding:20px; background:white; border-radius:12px; border:1px solid #f3f4f6; display:flex; align-items:center; gap:15px;"><div style="background:#fff1f2; padding:12px; border-radius:10px; color:#e11d48;">${ICON_X}</div><div style="text-align:left;"><div style="color:var(--text-muted); font-size:0.75rem; font-weight:600; text-transform:uppercase;">Pérdidas Periodo</div><strong style="font-size:1.4rem;">$${valorRechazados.toLocaleString()}</strong><div style="font-size:0.8rem; color:#be123c;">${rechazadosContados} pedidos cancelados</div></div></div>`;
+
+    const rPlatos = document.getElementById('rankings-categoria');
+    if(rPlatos) rPlatos.innerHTML = Object.entries(ventasPlatos).sort((a,b) => b[1]-a[1]).slice(0,5).map(([n,v]) => `<div style="padding:10px; background:#f9fafb; border-radius:8px; border:1px solid #eee; display:flex; justify-content:space-between;"><span>${n}</span> <strong>${v}</strong></div>`).join('') || "Sin datos";
+
+    const rIng = document.getElementById('rankings-ingredientes');
+    if(rIng) rIng.innerHTML = Object.entries(usoIngredientes).sort((a,b) => b[1]-a[1]).map(([n,v]) => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${n} (${v})</span>`).join('') || "Sin datos";
 };
