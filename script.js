@@ -40,7 +40,29 @@ window.toggleDish = (header) => {
     document.querySelectorAll('.dish-item').forEach(i => i.classList.remove('expanded'));
     if (!isOpened) dish.classList.add('expanded');
 };
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
 
+function validarRango() {
+    if (!ubicacionCliente) return true;
+    const dist = calcularDistancia(IKU_COORDS.lat, IKU_COORDS.lng, ubicacionCliente.lat, ubicacionCliente.lng);
+    
+    if (dist > RADIO_MAXIMO_KM) {
+        alert(`Lo sentimos, estás a ${dist.toFixed(1)}km. Solo entregamos en Pueblo Bello (máx ${RADIO_MAXIMO_KM}km).`);
+        document.querySelector('.btn-send-order').disabled = true;
+        document.querySelector('.btn-send-order').innerText = "FUERA DE COBERTURA";
+        return false;
+    }
+    return true;
+}
 window.toggleCart = () => document.getElementById('cart-modal').classList.toggle('open');
 window.cerrarTracker = () => document.getElementById('tracker-modal').classList.remove('open');
 
@@ -122,7 +144,42 @@ window.enviarPedido = async () => {
         setTimeout(() => btn.innerHTML = textoOriginal, 2000); 
         return; 
     }
+window.enviarPedido = async () => {
+    // ... validaciones previas ...
+    
+    if (esDomicilioForzado && !validarRango()) return;
 
+    // Crear el link de ubicación si existe
+    const linkMapa = ubicacionCliente 
+        ? `%0A📍 *Ubicación en tiempo real:* https://www.google.com/maps?q=${ubicacionCliente.lat},${ubicacionCliente.lng}` 
+        : "";
+
+    // Formatear mensaje como un Ticket
+    let msgWA = `*🧾 TICKET DE PEDIDO - IKU*%0A`;
+    msgWA += `*Cliente:* ${cliente}%0A`;
+    msgWA += `*Servicio:* ${tipo.toUpperCase()}%0A`;
+    msgWA += `--------------------------------%0A`;
+    
+    carrito.forEach(i => { 
+        msgWA += `*${i.cantidad}x* ${i.nombre}%0A`;
+        if(i.excluidos.length > 0) msgWA += `   _SIN: ${i.excluidos.join(', ')}_%0A`;
+    });
+
+    msgWA += `--------------------------------%0A`;
+    msgWA += `*TOTAL A PAGAR:* $${total.toLocaleString()}%0A`;
+    msgWA += linkMapa;
+    msgWA += `%0A%0A_Por favor, confirma este pedido para iniciar la preparación._`;
+
+    // 1. Guardar en Firebase (como respaldo para el Admin)
+    try {
+        await addDoc(collection(db, "pedidos"), { ... });
+        
+        // 2. Lanzar a WhatsApp
+        window.open(`https://wa.me/573017177781?text=${msgWA}`);
+        
+        // ... limpiar carrito y cerrar ...
+    } catch (e) { console.error(e); }
+};
     const total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
     let itemsParaEnviar = [];
     carrito.forEach(item => {
@@ -253,6 +310,34 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
                 s.style.display = 'none';
                 s.classList.remove('active');
             }
+            document.addEventListener("DOMContentLoaded", () => {
+    const inputNombre = document.getElementById('nombre-cliente');
+    const selectTipo = document.getElementById('tipo-servicio');
+
+    if (esDomicilioForzado) {
+        selectTipo.value = 'domicilio';
+        selectTipo.disabled = true; // Bloquea el cambio a "Mesa"
+        inputNombre.placeholder = "Nombre y Dirección exacta";
+        
+        // Pedir ubicación de inmediato para validar rango
+        solicitarUbicacion();
+    }
+    // ... tu lógica existente de mesa ...
+});
+
+function solicitarUbicacion() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            ubicacionCliente = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude
+            };
+            validarRango();
+        }, (err) => {
+            alert("Para domicilios, necesitamos tu ubicación para verificar si estamos en cobertura.");
+        });
+    }
+}
         });
     };
 });
