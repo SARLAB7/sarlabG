@@ -18,7 +18,8 @@ const mesaParam = params.get('mesa');
 document.addEventListener("DOMContentLoaded", () => {
     const inputNombre = document.getElementById('nombre-cliente');
     const selectTipo = document.getElementById('tipo-servicio');
-
+    const checkWhatsapp = document.getElementById('check-whatsapp');
+    
     if (esDomicilioForzado) {
         selectTipo.value = 'domicilio';
         selectTipo.disabled = true; 
@@ -30,6 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
         inputNombre.readOnly = true;
         inputNombre.style.backgroundColor = "#1f222a";
     }
+    if (checkWhatsapp) {
+            checkWhatsapp.checked = true;    // Lo marcamos por defecto
+            checkWhatsapp.disabled = true;   // Impedimos que lo desmarquen
+            // Opcional: Ocultar el contenedor del check para que no estorbe
+            const waContainer = checkWhatsapp.closest('.whatsapp-check');
+            if (waContainer) waContainer.style.opacity = "0.6"; 
+        }
 });
 
 // --- GEOLOCALIZACIÓN Y RANGO ---
