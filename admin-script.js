@@ -27,7 +27,7 @@ onAuthStateChanged(auth, (u) => {
         document.getElementById('admin-panel').style.display = 'flex';
         document.getElementById('login-screen').style.display = 'none';
         if(u.email === CORREO_MASTER) document.getElementById('master-tools').style.display = 'block';
-        escucharCarta(); escucharPedidos(); 
+        escucharCarta(); escucharPedidos(); escucharInventario();
     } else {
         if(u) signOut(auth);
         document.getElementById('admin-panel').style.display = 'none';
@@ -126,7 +126,59 @@ function escucharCarta() {
         });
     });
 }
+// --- GESTIÓN DE INVENTARIO ---
 
+function escucharInventario() {
+    onSnapshot(collection(db, "inventario"), (snap) => {
+        const lista = document.getElementById('lista-insumos');
+        const alertasCocina = document.getElementById('notificaciones-cocina');
+        if (!lista) return;
+
+        let htmlLista = '';
+        let htmlAlertas = '';
+
+        snap.forEach(docSnap => {
+            const i = docSnap.data();
+            i.id = docSnap.id;
+            
+            // Determinar si el stock es crítico
+            const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
+            const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
+            const bgCard = esCritico ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-dark)';
+
+            // 1. Construir la tarjeta Bento
+            htmlLista += `
+                <div class="stat-card" style="border: 1px solid ${colorCard}; background: ${bgCard}; cursor: pointer;" 
+                     onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unidad}</span>
+                        ${esCritico ? '<span style="color:var(--danger); font-size:1.2rem;">⚠️</span>' : ''}
+                    </div>
+                    <strong style="font-size: 1.2rem; display: block; margin: 5px 0;">${i.nombre}</strong>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: ${esCritico ? 'var(--danger)' : 'var(--white)'};">
+                        ${i.stockActual} 
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">
+                        Costo: $${Number(i.costoUnitario).toLocaleString()} | Min: ${i.umbralMinimo}
+                    </div>
+                </div>
+            `;
+
+            // 2. Si es crítico, generar banner para el monitor de pedidos
+            if (esCritico) {
+                htmlAlertas += `
+                    <div style="background: var(--danger); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; animation: pulse 2s infinite;">
+                        <span><strong>¡AGOTÁNDOSE!</strong> Se requiere ${i.nombre.toUpperCase()} (Quedan: ${i.stockActual})</span>
+                        <button onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\\'v-inventario\\']'))" style="background: white; color: var(--danger); border: none; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.7rem;">ABASTECER</button>
+                    </div>
+                `;
+            }
+        });
+
+        lista.innerHTML = htmlLista || '<p style="color:var(--text-muted);">Bodega vacía.</p>';
+        if (alertasCocina) alertasCocina.innerHTML = htmlAlertas;
+    });
+}
 // --- GESTIÓN DE PEDIDOS ---
 function escucharPedidos() {
     onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
@@ -264,7 +316,48 @@ window.actualizarMétricas = function() {
         rIng.innerHTML = sortedIng.map(([n,v]) => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:4px 10px; border-radius:20px; font-size:0.75rem;">${n} (${v})</span>`).join('') || "Sin datos";
     }
 };
+// --- FUNCIONES DEL FORMULARIO DE INVENTARIO ---
 
+window.editarInsumo = (id, n, s, u, m, c) => {
+    document.getElementById('inv-id').value = id;
+    document.getElementById('inv-name').value = decodeURIComponent(n);
+    document.getElementById('inv-stock').value = s;
+    document.getElementById('inv-unit').value = u;
+    document.getElementById('inv-min').value = m;
+    document.getElementById('inv-cost').value = c;
+    
+    document.getElementById('f-inv-title').innerText = "Actualizando Insumo";
+    document.getElementById('btn-cancelar-inv').style.display = 'block';
+    document.querySelector('#v-inventario .form-container').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.cancelarEdicionInv = () => {
+    document.getElementById('inv-form').reset();
+    document.getElementById('inv-id').value = '';
+    document.getElementById('f-inv-title').innerText = "Configurar Insumo";
+    document.getElementById('btn-cancelar-inv').style.display = 'none';
+};
+
+document.getElementById('inv-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('inv-id').value;
+    const datos = {
+        nombre: document.getElementById('inv-name').value,
+        stockActual: Number(document.getElementById('inv-stock').value),
+        unidad: document.getElementById('inv-unit').value,
+        umbralMinimo: Number(document.getElementById('inv-min').value),
+        costoUnitario: Number(document.getElementById('inv-cost').value),
+        lastUpdate: serverTimestamp()
+    };
+
+    try {
+        id ? await updateDoc(doc(db, "inventario", id), datos) 
+           : await addDoc(collection(db, "inventario"), datos);
+        window.cancelarEdicionInv();
+    } catch (error) {
+        console.error("Error en bodega:", error);
+    }
+};
 // --- ESTADOS Y ACCIONES ---
 window.actualizarEstado = async (id, estado) => await updateDoc(doc(db, "pedidos", id), { estado });
 window.cerrarPedido = async (id, m) => await updateDoc(doc(db, "pedidos", id), { estado: 'listo', metodoPago: m });
