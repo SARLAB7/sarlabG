@@ -169,9 +169,13 @@
                         </div>
                     </div>
 
-                    <!-- COLUMNA DERECHA -->
+                   <!-- COLUMNA DERECHA -->
                     <div style="flex: 1 1 300px;">
-                        <div class="form-container" style="position: sticky; top: 20px; background: var(--card-dark); border: 1px solid var(--border); padding: 24px; border-radius: 16px;">
+                        <div class="form-container" style="position: sticky; top: 20px; background: var(--card-dark); border: 1px solid var(--border); padding: 24px; border-radius: 16px; position: relative;">
+                            
+                            <!-- La X mágica que reemplaza al botón "Cancelar" grande -->
+                            <button type="button" id="btn-cancelar-inv" onclick="cancelarEdicionInv()" style="display:none; position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
+                            
                             <h3 id="f-inv-title" style="margin-bottom: 15px;">Configuración de Ítem</h3>
                             <form id="inv-form" style="display: flex; flex-direction: column; gap: 12px;">
                                 <input type="hidden" id="inv-id">
@@ -200,7 +204,6 @@
                                 
                                 <input type="hidden" id="inv-stock" value="0">
                                 <button type="submit" class="btn-action btn-yellow" style="margin-top: 10px;">Guardar Definición</button>
-                                <button type="button" id="btn-cancelar-inv" onclick="cancelarEdicionInv()" style="display:none;" class="btn-action btn-outline">Cancelar</button>
                             </form>
                         </div>
                     </div>
@@ -209,9 +212,10 @@
         </main>
     </div>
 
-    <!-- MODALES DE ACCIÓN -->
-    <div id="modal-compra" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
-        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:400px; color:var(--white);">
+  <!-- MODALES DE ACCIÓN -->
+    <div id="modal-compra" onclick="if(event.target === this) cerrarModales()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
+        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:400px; color:var(--white); position: relative;">
+            <button type="button" onclick="cerrarModales()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
             <h3 style="margin-bottom: 20px;">📦 Nueva Compra</h3>
             <form id="f-compra">
                 <label style="font-size: 0.8rem; color: var(--text-muted);">Insumo</label>
@@ -223,16 +227,16 @@
                 <label style="font-size: 0.8rem; color: var(--text-muted);">Costo Total ($)</label>
                 <input type="number" id="compra-costo" style="width:100%; margin-bottom:15px;" required>
                 
-                <div style="display:flex; gap:10px; margin-top: 10px;">
-                    <button type="button" onclick="cerrarModales()" class="btn-action btn-outline" style="flex:1;">Cancelar</button>
-                    <button type="submit" class="btn-action btn-primary" style="flex:1;">Ingresar</button>
+                <div style="display:flex; margin-top: 10px;">
+                    <button type="submit" class="btn-action btn-primary" style="width: 100%;">Ingresar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="modal-merma" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
-        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:400px; color:var(--white);">
+    <div id="modal-merma" onclick="if(event.target === this) cerrarModales()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:2000;">
+        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:30px; border-radius:24px; width:400px; color:var(--white); position: relative;">
+            <button type="button" onclick="cerrarModales()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
             <h3 style="color:#ef4444; margin-bottom: 20px;">⚠️ Reportar Merma</h3>
             <form id="f-merma">
                 <label style="font-size: 0.8rem; color: var(--text-muted);">Insumo</label>
@@ -248,20 +252,20 @@
                     <option value="preparacion">Error Preparación</option>
                 </select>
                 
-                <div style="display:flex; gap:10px; margin-top: 10px;">
-                    <button type="button" onclick="cerrarModales()" class="btn-action btn-outline" style="flex:1;">Cancelar</button>
-                    <button type="submit" class="btn-action" style="flex:1; background:#ef4444; color:white;">Reportar</button>
+                <div style="display:flex; margin-top: 10px;">
+                    <button type="submit" class="btn-action" style="width: 100%; background:#ef4444; color:white;">Reportar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="delete-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:3000;">
-        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:32px; border-radius:24px; text-align:center; max-width:400px; color:var(--white);">
-            <h3 id="modal-title">¿Confirmar acción?</h3>
-            <div style="display:flex; gap:12px; margin-top:20px;">
-                <button onclick="closeModal()" class="btn-action btn-outline" style="flex:1;">Cancelar</button>
-<button id="confirm-delete-btn" onclick="confirmarAccionModal()" class="btn-action" style="flex:1; background:#ef4444; color:white;">Confirmar</button>            </div>
+    <div id="delete-modal" onclick="if(event.target === this) closeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:3000;">
+        <div style="background:var(--card-dark); border: 1px solid var(--border); padding:32px; border-radius:24px; text-align:center; max-width:400px; color:var(--white); position: relative;">
+            <button type="button" onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
+            <h3 id="modal-title" style="margin-top: 10px;">¿Confirmar acción?</h3>
+            <div style="display:flex; margin-top:20px;">
+                <button id="confirm-delete-btn" onclick="confirmarAccionModal()" class="btn-action" style="width: 100%; background:#ef4444; color:white;">Confirmar</button>
+            </div>
         </div>
     </div>
 
