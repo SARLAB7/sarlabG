@@ -177,37 +177,42 @@
                             <button type="button" id="btn-cancelar-inv" onclick="cancelarEdicionInv()" style="display:none; position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;">✕</button>
                             
                             <h3 id="f-inv-title" style="margin-bottom: 15px;">Configuración de Ítem</h3>
-                            <form id="inv-form" style="display: flex; flex-direction: column; gap: 12px;">
-                                <!-- En lugar de solo 'Factor', pon una instrucción clara -->
-<label style="font-size:0.7rem;">¿CUÁNTOS [GRAMOS/ML] TRAE EL EMPAQUE QUE COMPRAS?</label>
-<input type="number" id="inv-factor" placeholder="Ej: 1000 si compras por Kilo">
-                                <input type="hidden" id="inv-id">
-                                <label style="font-size:0.7rem; color:var(--accent-yellow);">NOMBRE DEL INSUMO</label>
-                                <input type="text" id="inv-name" placeholder="Ej: Carne Res (g)" required>
-                                
-                                <div style="display:flex; gap:10px;">
-                                    <div style="flex:1;">
-                                        <label style="font-size:0.7rem;">UNIDAD VENTA</label>
-                                        <select id="inv-unit">
-                                            <option value="gramos">Gramos (g)</option>
-                                            <option value="unidades">Unidades</option>
-                                            <option value="ml">Mililitros (ml)</option>
-                                        </select>
-                                    </div>
-                                    <div style="flex:1;">
-                                        <label style="font-size:0.7rem;">FACTOR CONV.</label>
-                                        <input type="number" id="inv-factor" placeholder="1000">
-                                    </div>
-                                </div>
-                                
-                                <div style="display:flex; gap:10px;">
-                                    <div style="flex:1;"><label style="font-size:0.7rem; color: var(--danger);">MIN. ALERTA</label><input type="number" id="inv-min" required></div>
-                                    <div style="flex:1;"><label style="font-size:0.7rem; color: var(--success);">COSTO PROM.</label><input type="number" id="inv-cost" required></div>
-                                </div>
-                                
-                                <input type="hidden" id="inv-stock" value="0">
-                                <button type="submit" class="btn-action btn-yellow" style="margin-top: 10px;">Guardar Definición</button>
-                            </form>
+                           <form id="inv-form" style="display: flex; flex-direction: column; gap: 12px;">
+    <input type="hidden" id="inv-id">
+    
+    <label style="font-size:0.7rem; color:var(--accent-yellow);">NOMBRE DEL INSUMO</label>
+    <input type="text" id="inv-name" placeholder="Ej: Carne Res" required>
+    
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+            <label style="font-size:0.7rem;">UNIDAD VENTA (RECETA)</label>
+            <select id="inv-unit">
+                <option value="gramos">Gramos (g)</option>
+                <option value="unidades">Unidades</option>
+                <option value="ml">Mililitros (ml)</option>
+            </select>
+        </div>
+        <div style="flex:1;">
+            <!-- Eliminamos el ID duplicado y dejamos solo este con la explicación clara -->
+            <label style="font-size:0.7rem;">CONTENIDO POR EMPAQUE</label>
+            <input type="number" id="inv-factor" placeholder="Ej: 1000 si es x Kilo" required>
+        </div>
+    </div>
+    
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1;">
+            <label style="font-size:0.7rem; color: var(--danger);">MÍNIMO ALERTA</label>
+            <input type="number" id="inv-min" placeholder="Stock bajo" required>
+        </div>
+        <div style="flex:1;">
+            <label style="font-size:0.7rem; color: var(--success);">COSTO PROM. ($)</label>
+            <input type="number" id="inv-cost" placeholder="Valor unitario" required>
+        </div>
+    </div>
+    
+    <input type="hidden" id="inv-stock" value="0">
+    <button type="submit" class="btn-action btn-yellow" style="margin-top: 10px;">Guardar Definición</button>
+</form>
                         </div>
                     </div>
                 </div>
