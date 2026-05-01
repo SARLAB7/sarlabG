@@ -42,19 +42,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- GEOLOCALIZACIÓN Y RANGO ---
 function solicitarUbicacion() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            ubicacionCliente = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    // 1. Verificar si el navegador soporta Geolocalización
+    if (!navigator.geolocation) {
+        alert("Tu navegador no soporta geolocalización. Intenta con otro.");
+        return;
+    }
+
+    const btn = document.querySelector('.btn-send-order');
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            // Éxito
+            ubicacionCliente = { 
+                lat: pos.coords.latitude, 
+                lng: pos.coords.longitude 
+            };
             validarRango(); 
-        }, (err) => {
-            if(esDomicilioForzado) {
-                const btn = document.querySelector('.btn-send-order');
+        }, 
+        (err) => {
+            // Error
+            if (esDomicilioForzado) {
                 btn.disabled = true;
                 btn.innerText = "GPS REQUERIDO";
-                alert("Para domicilios es obligatorio activar el GPS.");
+
+                // Mensajes personalizados según el error de la API
+                let mensaje = "Para domicilios es obligatorio activar el GPS.";
+                if (err.code === 1) { // PERMISSION_DENIED
+                    mensaje = "Has bloqueado el acceso al GPS. Por favor, habilítalo en la configuración de tu navegador para continuar.";
+                } else if (err.code === 2 || err.code === 3) { // POSITION_UNAVAILABLE o TIMEOUT
+                    mensaje = "No pudimos obtener tu ubicación. Verifica tu señal o conexión.";
+                }
+                
+                alert(mensaje);
+                console.error(`Error de GPS (${err.code}): ${err.message}`);
             }
-        });
-    }
+        },
+        {
+            enableHighAccuracy: true, // Fuerza mayor precisión (útil para domicilios)
+            timeout: 10000,           // Espera máximo 10 segundos
+            maximumAge: 0             // No uses ubicación vieja en caché
+        }
+    );
 }
 
 function calcularDistancia(lat1, lon1, lat2, lon2) {
