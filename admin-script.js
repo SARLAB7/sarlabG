@@ -640,20 +640,34 @@ window.actualizarStockFisico = async (idInsumo, nuevoStock, stockAnterior, nombr
     }
 };
 
-window.abrirSeccionBalance = async () => {
+window.abrirSeccionBalance = async () => {window.abrirSeccionBalance = async () => {
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
     document.getElementById('v-balance').classList.add('active');
     
     const tbody = document.getElementById('tabla-balance-seccion');
     if(!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance e inventario físico...</td></tr>';
+    const filtro = document.getElementById('filtro-balance')?.value || 'hoy';
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance para: ${filtro.toUpperCase()}...</td></tr>`;
     
     const ahora = new Date();
-    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
+    let fechaInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), 0, 0, 0);
+    let fechaFin = null;
+
+    // Lógica del filtro de fechas
+    if (filtro === 'ayer') {
+        fechaInicio.setDate(fechaInicio.getDate() - 1);
+        fechaFin = new Date(fechaInicio);
+        fechaFin.setHours(23, 59, 59, 999);
+    } else if (filtro === 'semana') {
+        fechaInicio.setDate(ahora.getDate() - 7);
+    } else if (filtro === 'mes') {
+        fechaInicio.setDate(1); // Día 1 de este mes
+    } else if (filtro === 'todo') {
+        fechaInicio = new Date(2020, 0, 1); // Desde que inició el mundo IKU
+    }
     
     try {
-        // Ahora cargamos TODOS los insumos primero, hayan tenido movimiento o no
         let balance = {}; 
         insumosGlobales.forEach(insumo => {
             balance[insumo.id] = { 
@@ -665,8 +679,14 @@ window.abrirSeccionBalance = async () => {
             };
         });
 
-        // Buscamos lo que pasó hoy y lo sumamos/restamos
-        const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
+        // Hacemos el query a Firebase usando las fechas calculadas
+        let q;
+        if (fechaFin) {
+            q = query(collection(db, "kardex"), where("timestamp", ">=", fechaInicio), where("timestamp", "<=", fechaFin));
+        } else {
+            q = query(collection(db, "kardex"), where("timestamp", ">=", fechaInicio));
+        }
+        
         const snap = await getDocs(q);
         
         snap.forEach(d => {
@@ -675,7 +695,6 @@ window.abrirSeccionBalance = async () => {
                 if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += Number(mov.cantidad);
                 if (mov.tipo === 'salida') balance[mov.insumoId].salidas += Number(mov.cantidad);
             } else {
-                // Para insumos que fueron borrados hoy pero dejaron rastro
                 balance[mov.insumoId] = { 
                     nombre: 'Insumo Eliminado', 
                     entradas: mov.tipo === 'entrada' ? Number(mov.cantidad) : 0, 
@@ -696,10 +715,15 @@ window.abrirSeccionBalance = async () => {
         datosBalanceActual.forEach(b => {
             const isEliminado = !b.activo;
             
-            // LA MAGIA DE LA EDICIÓN: Creamos un input con colores llamativos para editar directamente
-            const celdaStockEditable = isEliminado 
-                ? `<span style="color: var(--danger)">Eliminado</span>` 
-                : `<input type="number" value="${b.stockActual}" onchange="actualizarStockFisico('${b.id}', this.value, ${b.stockActual}, '${b.nombre}')" style="width: 85px; padding: 6px; text-align: center; border-radius: 8px; border: 2px solid var(--border); background: #0f172a; color: var(--accent-yellow); font-weight: 800; font-size: 1.1rem; cursor: pointer;">`;
+            // SEGURIDAD: Solo dejamos editar el stock físico si estamos viendo "Hoy"
+            let celdaStockEditable;
+            if (isEliminado) {
+                celdaStockEditable = `<span style="color: var(--danger)">Eliminado</span>`;
+            } else if (filtro === 'hoy') {
+                celdaStockEditable = `<input type="number" value="${b.stockActual}" onchange="actualizarStockFisico('${b.id}', this.value, ${b.stockActual}, '${b.nombre}')" style="width: 85px; padding: 6px; text-align: center; border-radius: 8px; border: 2px solid var(--border); background: #0f172a; color: var(--accent-yellow); font-weight: 800; font-size: 1.1rem; cursor: pointer;">`;
+            } else {
+                celdaStockEditable = `<span style="font-size: 1.1rem; font-weight: 800; color: var(--text-muted);">${b.stockActual}</span>`;
+            }
 
             filasHTML += `
                 <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
@@ -728,11 +752,14 @@ window.abrirSeccionBalance = async () => {
 
 window.descargarBalanceCSV = () => {
     if (datosBalanceActual.length === 0) {
-        alert("No hay movimientos hoy para descargar.");
+        alert("No hay movimientos para descargar en este periodo.");
         return;
     }
 
-    let csvContent = "Insumo,Unidad,Entradas Hoy,Salidas Hoy,Stock Final en Bodega\n";
+    const filtro = document.getElementById('filtro-balance')?.value || 'hoy';
+    let csvContent = `Periodo: ${filtro.toUpperCase()}\n`;
+    csvContent += "Insumo,Unidad,Entradas,Salidas,Stock Final Actual en Bodega\n";
+    
     datosBalanceActual.forEach(b => {
         csvContent += `"${b.nombre}","${b.unidad}","${b.entradas}","${b.salidas}","${b.stockActual}"\n`;
     });
@@ -743,7 +770,7 @@ window.descargarBalanceCSV = () => {
     
     const fechaActual = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
     link.setAttribute("href", url);
-    link.setAttribute("download", `Balance_Inventario_IKU_${fechaActual}.csv`);
+    link.setAttribute("download", `Inventario_IKU_${filtro}_${fechaActual}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
