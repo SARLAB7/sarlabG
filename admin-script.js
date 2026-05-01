@@ -219,6 +219,13 @@ if(formInv) {
     formInv.onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById('inv-id').value;
+        const btnSubmit = formInv.querySelector('button[type="submit"]');
+        const textoOriginal = btnSubmit.innerText;
+        
+        // Efecto visual de carga
+        btnSubmit.innerText = "Guardando...";
+        btnSubmit.disabled = true;
+
         const datos = {
             nombre: document.getElementById('inv-name').value,
             stockActual: Number(document.getElementById('inv-stock').value || 0),
@@ -228,10 +235,22 @@ if(formInv) {
             factor: Number(document.getElementById('inv-factor').value) || 1,
             lastUpdate: serverTimestamp()
         };
+        
         try {
             id ? await updateDoc(doc(db, "inventario", id), datos) : await addDoc(collection(db, "inventario"), datos);
+            
+            // Alerta de confirmación clara
+            alert(id ? "✅ Insumo actualizado correctamente." : "✅ Nuevo insumo guardado en la bodega.");
             window.cancelarEdicionInv();
-        } catch (error) { console.error("Error en inventario:", error); }
+            
+        } catch (error) { 
+            console.error("Error en inventario:", error); 
+            alert("❌ Hubo un problema de conexión al guardar.");
+        } finally {
+            // Restaurar el botón
+            btnSubmit.innerText = textoOriginal;
+            btnSubmit.disabled = false;
+        }
     };
 }
 
@@ -239,6 +258,33 @@ const formCompra = document.getElementById('f-compra');
 if (formCompra) {
     formCompra.onsubmit = async (e) => {
         e.preventDefault();
+        // --- AUTO-CALCULAR COSTO SUGERIDO EN COMPRAS ---
+const inputCant = document.getElementById('compra-cant');
+const selectInsumo = document.getElementById('compra-insumo');
+const inputCosto = document.getElementById('compra-costo');
+
+function autocompletarCosto() {
+    if (!inputCant || !selectInsumo || !inputCosto) return;
+    
+    // Buscamos cuál insumo seleccionó
+    const insumo = insumosGlobales.find(i => i.id === selectInsumo.value);
+    const paquetes = Number(inputCant.value);
+    
+    if (insumo && paquetes > 0) {
+        // Multiplicamos el costo de 1 unidad (ej. gramo) por lo que trae el empaque (factor)
+        const costoPorEmpaque = (Number(insumo.costoUnitario) || 0) * (Number(insumo.factor) || 1);
+        const totalEstimado = costoPorEmpaque * paquetes;
+        
+        // Redondeamos para no tener decimales y lo ponemos en el input
+        inputCosto.value = Math.round(totalEstimado);
+    } else {
+        inputCosto.value = ''; // Limpiamos si borra la cantidad
+    }
+}
+
+// Escuchamos cuando el usuario escriba o cambie de insumo
+if (inputCant) inputCant.addEventListener('input', autocompletarCosto);
+if (selectInsumo) selectInsumo.addEventListener('change', autocompletarCosto);
         const diasCaducidad = document.getElementById('compra-caducidad').value;
 let conceptoCompra = `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`;
 
