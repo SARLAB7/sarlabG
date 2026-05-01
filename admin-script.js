@@ -341,18 +341,42 @@ window.cerrarModales = () => { document.getElementById('modal-compra').style.dis
 window.imprimirComanda = (ps) => { const p = JSON.parse(decodeURIComponent(ps)); const div = document.createElement('div'); div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><hr><ul>${p.items.map(i => `<li>${i.nombre}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`; document.body.appendChild(div); window.print(); document.body.removeChild(div); };
 window.confirmarReinicioTotal = () => { idParaEliminar = "MASTER"; document.getElementById('modal-title').innerText = '¿REINICIAR TODO?'; document.getElementById('delete-modal').style.display = 'flex'; };
 
-const btnConfirmar = document.getElementById('confirm-delete-btn');
-if(btnConfirmar) {
-    btnConfirmar.onclick = async () => {
-        if(idParaEliminar === "MASTER") {
-            const ps = pedidosGlobales.map(p => deleteDoc(doc(db, "pedidos", p.id))); await Promise.all(ps);
-        } else if(idParaEliminar?.startsWith("RECHAZAR:")) {
-            await updateDoc(doc(db, "pedidos", idParaEliminar.split(":")[1]), { estado: 'rechazado' });
-        } else if(idParaEliminar?.startsWith("INSUMO:")) {
-            await deleteDoc(doc(db, "inventario", idParaEliminar.split(":")[1]));
-        } else if(idParaEliminar) {
+// --- FUNCIÓN GLOBAL DE CONFIRMACIÓN (MODAL) ---
+window.confirmarAccionModal = async () => {
+    const btn = document.getElementById('confirm-delete-btn');
+    const textoOriginal = btn.innerText;
+    
+    try {
+        btn.innerText = "Procesando..."; // Feedback visual
+        btn.disabled = true;
+
+        if (idParaEliminar === "MASTER") {
+            // Borrar todos los pedidos
+            const ps = pedidosGlobales.map(p => deleteDoc(doc(db, "pedidos", p.id))); 
+            await Promise.all(ps);
+        } else if (idParaEliminar?.startsWith("RECHAZAR:")) {
+            // Rechazar pedido
+            const pedidoId = idParaEliminar.split(":")[1];
+            await updateDoc(doc(db, "pedidos", pedidoId), { estado: 'rechazado' });
+        } else if (idParaEliminar?.startsWith("INSUMO:")) {
+            // Eliminar insumo
+            const insumoId = idParaEliminar.split(":")[1];
+            await deleteDoc(doc(db, "inventario", insumoId));
+        } else if (idParaEliminar) {
+            // Eliminar plato de la carta
             await deleteDoc(doc(db, "platos", idParaEliminar));
         }
-        idParaEliminar = null; document.getElementById('delete-modal').style.display = 'none';
-    };
-}
+        
+        // Limpiar y cerrar
+        idParaEliminar = null; 
+        document.getElementById('delete-modal').style.display = 'none';
+
+    } catch (error) {
+        console.error("Error al ejecutar la acción:", error);
+        alert("Hubo un error al conectar con la base de datos.");
+    } finally {
+        // Restaurar el botón siempre
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+};
