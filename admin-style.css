@@ -85,7 +85,47 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
 .row-hover:hover {
     background: rgba(255, 255, 255, 0.03);
 }
+/* Contenedor de tabla estilo Glassmorphism */
+.dashboard-table-wrapper {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
 
+/* Filas con hover suave */
+.row-hover {
+    cursor: default;
+}
+
+.row-hover:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Estilo para los inputs de la tabla (más limpios) */
+.table-input-stock {
+    background: #0f1115 !important;
+    border: 1px solid var(--border) !important;
+    color: var(--accent-yellow) !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    padding: 4px !important;
+    margin-bottom: 0 !important;
+    transition: all 0.2s ease;
+}
+
+.table-input-stock:focus {
+    border-color: var(--accent-yellow) !important;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.15);
+}
+
+/* Badges de estado */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: inline-block;
+}
 .dashboard-table-container input:focus {
     outline: none;
     border-color: var(--accent-yellow) !important;
