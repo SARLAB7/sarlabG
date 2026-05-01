@@ -214,6 +214,35 @@ function escucharInventario() {
     });
 }
 
+// --- SISTEMA DE NOTIFICACIONES ELEGANTE (INYECCIÓN AUTOMÁTICA) ---
+// Crea el contenedor de alertas mágicamente sin tocar el HTML
+if (!document.getElementById('iku-toast-container')) {
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'iku-toast-container';
+    toastContainer.style = "position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;";
+    document.body.appendChild(toastContainer);
+}
+
+window.mostrarNotificacion = (mensaje, tipo = 'success') => {
+    const container = document.getElementById('iku-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    const color = tipo === 'success' ? '#10b981' : '#ef4444'; 
+    const icono = tipo === 'success' ? '✅' : '❌';
+    
+    toast.style = `background: var(--card-dark, #1e293b); border-left: 4px solid ${color}; color: white; padding: 16px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 12px; transform: translateX(100%); transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0;`;
+    toast.innerHTML = `<span style="font-size: 1.2rem;">${icono}</span> <span>${mensaje}</span>`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => { toast.style.transform = 'translateX(0)'; toast.style.opacity = '1'; }, 10);
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)'; toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
+// --- FORMULARIO CREACIÓN DE INSUMOS ---
 const formInv = document.getElementById('inv-form');
 if(formInv) {
     formInv.onsubmit = async (e) => {
@@ -234,7 +263,8 @@ if(formInv) {
         };
         try {
             id ? await updateDoc(doc(db, "inventario", id), datos) : await addDoc(collection(db, "inventario"), datos);
-            // USAMOS LA NOTIFICACIÓN NUEVA EN VEZ DEL ALERT
+            
+            // NOTIFICACIÓN ELEGANTE EN VEZ DEL ALERT FEO
             mostrarNotificacion(id ? "Insumo actualizado correctamente." : "Nuevo insumo guardado.", "success");
             window.cancelarEdicionInv();
         } catch (error) { 
@@ -246,7 +276,7 @@ if(formInv) {
     };
 }
 
-// --- COMPRAS Y AUTO-CÁLCULO DE COSTO ---
+// --- COMPRAS Y AUTO-CÁLCULO DE COSTO INTELIGENTE ---
 const formCompra = document.getElementById('f-compra');
 const inputCantCompra = document.getElementById('compra-cant');
 const selectInsumoCompra = document.getElementById('compra-insumo');
@@ -258,15 +288,25 @@ window.calcularCostoCompra = () => {
     const cant = Number(inputCantCompra.value);
     
     if (insumo && cant > 0) {
-        // Multiplica el costo unitario por lo que trae el empaque por los empaques comprados
-        const costoTotalEstimado = (Number(insumo.costoUnitario) || 0) * (Number(insumo.factor) || 1) * cant;
-        inputCostoCompra.value = Math.round(costoTotalEstimado); // Sin decimales
+        let costoGuardado = Number(insumo.costoUnitario) || 0;
+        let factor = Number(insumo.factor) || 1;
+        
+        let costoPorEmpaque;
+        // MAGIA: Si el costo guardado es muy alto (ej. 20000), el sistema sabe que es el precio 
+        // del empaque completo. Si es bajito (ej. 40), sabe que es el precio por gramo.
+        if (costoGuardado > 500 && factor > 1) {
+            costoPorEmpaque = costoGuardado; 
+        } else {
+            costoPorEmpaque = costoGuardado * factor;
+        }
+        
+        const costoTotalEstimado = costoPorEmpaque * cant;
+        inputCostoCompra.value = Math.round(costoTotalEstimado); 
     } else {
         inputCostoCompra.value = '';
     }
 };
 
-// Se ejecuta cada vez que cambias la cantidad o seleccionas otro insumo
 if (inputCantCompra) inputCantCompra.addEventListener('input', calcularCostoCompra);
 if (selectInsumoCompra) selectInsumoCompra.addEventListener('change', calcularCostoCompra);
 
@@ -292,7 +332,7 @@ if (formCompra) {
         if (diasCaducidad) {
             const fechaVence = new Date();
             fechaVence.setDate(fechaVence.getDate() + Number(diasCaducidad));
-            conceptoCompra += ` | ⚠️ Vence aprox: ${fechaVence.toLocaleDateString()}`;
+            conceptoCompra += ` | Vence aprox: ${fechaVence.toLocaleDateString()}`;
         }
 
         try {
@@ -304,12 +344,11 @@ if (formCompra) {
                 insumoId: idInsumo, tipo: 'entrada', concepto: conceptoCompra, cantidad: cantidadTotalIngresada, costoReferencia: inversionTotal, timestamp: serverTimestamp()
             });
             
-            // MENSAJE HERMOSO DE ÉXITO
-            mostrarNotificacion(`✅ Ingreso exitoso: +${cantidadTotalIngresada.toLocaleString()} ${datosInsumo.unidad}`);
+            mostrarNotificacion(`Ingreso exitoso: +${cantidadTotalIngresada.toLocaleString()} ${datosInsumo.unidad}`);
             cerrarModales();
         } catch (error) {
             console.error(error);
-            mostrarNotificacion("❌ Error de red al registrar la compra.", "error");
+            mostrarNotificacion("Error al registrar la compra.", "error");
         } finally {
             btn.innerText = "Ingresar"; btn.disabled = false;
         }
