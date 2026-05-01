@@ -180,29 +180,43 @@ window.renderInventarioTable = () => {
 
         const esBajoStock = Number(insumo.stockActual) <= Number(insumo.umbralMinimo);
         
-        // Estilo del Estado (Status) como en la imagen
-        const statusBadge = esBajoStock 
-            ? `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">STOCK BAJO</span>`
-            : `<span style="background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(34, 197, 94, 0.3);">SALUDABLE</span>`;
+        // Estilo del Estado
+        const statusHTML = esBajoStock 
+            ? `<span class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">CRÍTICO</span>`
+            : `<span class="status-badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);">SALUDABLE</span>`;
 
         html += `
-            <tr class="row-hover" style="border-bottom: 1px solid var(--border); transition: 0.2s;">
+            <tr class="row-hover" style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 16px 20px;">
+                    <span style="font-family: monospace; color: var(--text-muted); font-size: 0.75rem;">
+                        #${insumo.id.substring(0,6).toUpperCase()}
+                    </span>
+                </td>
                 <td style="padding: 16px 20px;">
                     <div style="font-weight: 600; color: var(--white);">${insumo.nombre}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted);">SKU: ${insumo.id.substring(0,6).toUpperCase()}</div>
                 </td>
-                <td style="padding: 16px 20px; color: var(--text-muted); text-transform: capitalize;">${insumo.unidad}</td>
+                <td style="padding: 16px 20px; color: var(--text-muted); font-size: 0.85rem;">
+                    ${insumo.unidad}
+                </td>
                 <td style="padding: 16px 20px; text-align: center;">
                     <input type="number" 
+                        class="table-input-stock"
                         value="${insumo.stockActual}" 
                         onchange="actualizarStockFisico('${insumo.id}', this.value, ${insumo.stockActual}, '${insumo.nombre}')"
-                        style="background: #0f172a; border: 1px solid var(--border); color: var(--accent-yellow); text-align: center; width: 80px; padding: 5px; border-radius: 8px; font-weight: 800;">
+                        style="width: 70px;">
                 </td>
-                <td style="padding: 16px 20px; text-align: center; color: var(--text-muted);">${insumo.unidad === 'gramos' ? 'Grs' : insumo.unidad === 'ml' ? 'Ml' : 'Und'}</td>
-                <td style="padding: 16px 20px; color: var(--white);">$${Math.round(insumo.costoUnitario || 0).toLocaleString()}</td>
-                <td style="padding: 16px 20px; text-align: center;">${statusBadge}</td>
+                <td style="padding: 16px 20px; color: var(--white); font-weight: 500;">
+                    $${Math.round(insumo.costoUnitario || 0).toLocaleString()}
+                </td>
+                <td style="padding: 16px 20px; text-align: center;">
+                    ${statusHTML}
+                </td>
                 <td style="padding: 16px 20px; text-align: right;">
-                    <button onclick="verHistorialInsumo('${insumo.id}', '${insumo.nombre}')" style="background: none; border: none; color: var(--accent-yellow); cursor: pointer; font-size: 1.2rem;">🕒</button>
+                    <button onclick="verHistorialInsumo('${insumo.id}', '${insumo.nombre}')" 
+                        style="background:none; border:none; color:var(--accent-yellow); cursor:pointer; font-size: 1.1rem; opacity: 0.7; transition: 0.2s;"
+                        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                        🕒
+                    </button>
                 </td>
             </tr>
         `;
