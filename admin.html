@@ -20,13 +20,14 @@
 
     <!-- PANEL DE ADMINISTRACIÓN -->
     <div id="admin-panel" style="display:none;">
-        <aside class="sidebar">
-            <h2>IKU<span>.</span></h2>
-            <div class="nav-item active" onclick="cambiarVista('v-pedidos', this)">Monitor de Pedidos</div>
-            <div class="nav-item" onclick="cambiarVista('v-carta', this)">Gestión de Carta</div>
-            <div class="nav-item" onclick="cambiarVista('v-mesas', this)">Plano de Mesas</div>
-            <div class="nav-item" onclick="cambiarVista('v-stats', this)">Métricas</div>
-            <div class="nav-item" onclick="cambiarVista('v-inventario', this)">Inventario e Insumos</div>
+       <aside class="sidebar">
+    <h2>IKU<span>.</span></h2>
+    <div class="nav-item active" onclick="cambiarVista('v-pedidos', this)">Monitor de Pedidos</div>
+    <div class="nav-item" onclick="cambiarVista('v-carta', this)">Gestión de Carta</div>
+    <div class="nav-item" onclick="cambiarVista('v-mesas', this)">Plano de Mesas</div>
+    <div class="nav-item" onclick="cambiarVista('v-stats', this)">Métricas</div>
+    <div class="nav-item" onclick="cambiarVista('v-insumos', this)">Configuración Insumos</div>
+     <div class="nav-item" onclick="cambiarVista('v-inventario-real', this)">Inventario</div>       
 
             <div style="margin-top: auto;">
                 <div class="nav-item" id="logout-btn" style="color: #ef4444;">Cerrar Sesión</div>
@@ -217,42 +218,38 @@
                     </div>
                 </div>
             </section>
-       <!-- NUEVA SECCIÓN: BALANCE DIARIO INDEPENDIENTE -->
-            <section id="v-balance" class="view-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-<h2 style="margin: 0; color: var(--accent-yellow); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-    📊 Cuadre de Inventario 
-    <select id="filtro-balance" onchange="abrirSeccionBalance()" style="font-size: 0.9rem; padding: 6px 12px; border-radius: 8px; background: var(--sidebar); color: var(--white); border: 1px solid var(--border); font-weight: 600; cursor: pointer;">
-        <option value="hoy">Hoy</option>
-        <option value="ayer">Ayer</option>
-        <option value="semana">Últimos 7 días</option>
-        <option value="mes">Este Mes</option>
-        <option value="todo">Histórico Completo</option>
-    </select>
-</h2>                    </div>
-                    <button onclick="descargarBalanceCSV()" class="btn-action btn-primary" style="background: #10b981; color: white; border: none;">📥 Descargar Excel</button>
-                    <button onclick="volverInventario()" class="btn-action btn-outline" style="color: var(--text-muted); border-color: var(--border);">← Volver</button>
-                </div>
-                
-                <div style="background: var(--card-dark); padding: 24px; border-radius: 16px; border: 1px solid var(--border);">
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border); color: var(--text-muted);">
-                                    <th style="padding: 12px; font-weight: 600;">Insumo</th>
-                                    <th style="padding: 12px; font-weight: 600; text-align: center; color: #22c55e;">+ Entró Hoy</th>
-                                    <th style="padding: 12px; font-weight: 600; text-align: center; color: #ef4444;">- Salió Hoy</th>
-                                    <th style="padding: 12px; font-weight: 600; text-align: right; color: var(--white);">= Quedó en Bodega</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-balance-seccion">
-                                <!-- Aquí se inyectan los datos -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+    <!-- SECCIÓN INVENTARIO DINÁMICO (Estilo Dashboard) -->
+<section id="v-inventario-real" class="view-section">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; color: var(--white);">Inventario Central</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Monitoreo y ajustes de stock en tiempo real</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <input type="text" id="busqueda-inventario" oninput="filtrarInventarioTable()" placeholder="Buscar insumo..." style="background: var(--card-dark); border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 10px; width: 250px;">
+            <button onclick="descargarBalanceCSV()" class="btn-action btn-primary" style="background: #10b981; border: none;">Exportar Excel</button>
+        </div>
+    </header>
+
+    <div class="dashboard-table-container" style="background: var(--card-dark); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.02); color: var(--text-muted); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 16px 20px;">Título / Insumo</th>
+                    <th style="padding: 16px 20px;">Categoría</th>
+                    <th style="padding: 16px 20px; text-align: center;">Stock (QTY)</th>
+                    <th style="padding: 16px 20px; text-align: center;">U. Medida</th>
+                    <th style="padding: 16px 20px;">Precio Unit.</th>
+                    <th style="padding: 16px 20px; text-align: center;">Estado</th>
+                    <th style="padding: 16px 20px; text-align: right;">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-inventario-dinamica">
+                <!-- Se llena con JS -->
+            </tbody>
+        </table>
+    </div>
+</section>
         </main>
     </div>
 
