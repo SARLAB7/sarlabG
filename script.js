@@ -46,10 +46,16 @@ function solicitarUbicacion() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((pos) => {
             ubicacionCliente = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            validarRango();
-        }, () => {
-            // Cambiamos el texto aquí
-            alert("Para domicilios, activa el GPS para verificar cobertura en Medellín.");
+            // Ejecutar validación de inmediato
+            validarRango(); 
+        }, (err) => {
+            // Si niega el GPS en modo domicilio, bloqueamos el botón por precaución
+            if(esDomicilioForzado) {
+                const btn = document.querySelector('.btn-send-order');
+                btn.disabled = true;
+                btn.innerText = "GPS REQUERIDO";
+                alert("Para domicilios es obligatorio activar el GPS.");
+            }
         });
     }
 }
