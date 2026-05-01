@@ -239,6 +239,17 @@ const formCompra = document.getElementById('f-compra');
 if (formCompra) {
     formCompra.onsubmit = async (e) => {
         e.preventDefault();
+        const diasCaducidad = document.getElementById('compra-caducidad').value;
+let conceptoCompra = `Compra de ${paquetesRecibidos} empaque(s) de ${datosInsumo.nombre}`;
+
+// Si puso días, lo agregamos al concepto para que quede en el historial
+if (diasCaducidad) {
+    const fechaVence = new Date();
+    fechaVence.setDate(fechaVence.getDate() + Number(diasCaducidad));
+    conceptoCompra += ` | ⚠️ Vence aprox: ${fechaVence.toLocaleDateString()}`;
+}
+
+// ... Y luego ese conceptoCompra es el que se guarda en el addDoc del kardex.
         const idInsumo = document.getElementById('compra-insumo').value;
         const paquetesRecibidos = Number(document.getElementById('compra-cant').value);
         const inversionTotal = Number(document.getElementById('compra-costo').value);
