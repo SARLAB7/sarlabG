@@ -3,8 +3,8 @@ import { collection, addDoc, onSnapshot, doc, query, orderBy, serverTimestamp } 
 
 // --- CONFIGURACIÓN Y ESTADO ---
 let carrito = [];
-const IKU_COORDS = { lat: 10.4216, lng: -73.6885 }; // Pueblo Bello, Cesar
-const RADIO_MAXIMO_KM = 15; 
+const IKU_COORDS = { lat: 6.2442, lng: -75.5812 }; // Coordenadas centrales de Medellín
+const RADIO_MAXIMO_KM = 10; // Ponle 10km para abarcar gran parte de la ciudad en tu prueba
 let ubicacionCliente = null;
 
 const ICON_TRASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -39,7 +39,8 @@ function solicitarUbicacion() {
             ubicacionCliente = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             validarRango();
         }, () => {
-            alert("Para domicilios, activa el GPS para verificar cobertura en Pueblo Bello.");
+            // Cambiamos el texto aquí
+            alert("Para domicilios, activa el GPS para verificar cobertura en Medellín.");
         });
     }
 }
@@ -58,7 +59,8 @@ function validarRango() {
     
     if (dist > RADIO_MAXIMO_KM) {
         const btn = document.querySelector('.btn-send-order');
-        alert(`Fuera de rango: Estás a ${dist.toFixed(1)}km. Solo entregamos en Pueblo Bello (máx ${RADIO_MAXIMO_KM}km).`);
+        // Cambiamos el texto aquí
+        alert(`Fuera de rango: Estás a ${dist.toFixed(1)}km. Solo entregamos en Medellín (máx ${RADIO_MAXIMO_KM}km).`);
         btn.disabled = true;
         btn.innerText = "FUERA DE COBERTURA";
         return false;
