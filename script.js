@@ -168,10 +168,11 @@ function actualizarCarrito() {
 
 window.quitar = (i) => { carrito.splice(i, 1); actualizarCarrito(); };
 
-// --- ENVÍO DE PEDIDO ---
+// --- ENVÍO DE PEDIDO REFINADO ---
 window.enviarPedido = async () => {
     const cliente = document.getElementById('nombre-cliente')?.value;
     const tipo = document.getElementById('tipo-servicio')?.value;
+    const quiereRespaldo = document.getElementById('check-whatsapp')?.checked; // Capturamos el estado del check
     const btn = document.querySelector('.btn-send-order');
 
     // 1. VALIDACIONES BÁSICAS
@@ -181,20 +182,20 @@ window.enviarPedido = async () => {
         return;
     }
 
-    // 2. MURO DE SEGURIDAD PARA DOMICILIOS
-    if (esDomicilioForzado) {
+    // 2. MURO DE SEGURIDAD PARA DOMICILIOS (Lógica IKU Pueblo Bello)
+    if (tipo === 'domicilio') {
         if (!ubicacionCliente) {
             alert("No hemos detectado tu ubicación GPS.");
             solicitarUbicacion();
             return;
         }
-        if (!validarRango()) return; // Detiene el envío si está fuera de rango
+        if (!validarRango()) return; // Valida radio de 4km[cite: 7]
     }
 
     const total = carrito.reduce((s, x) => s + (x.precio * x.cantidad), 0);
     const linkMapa = ubicacionCliente ? `%0A📍 *Ubicación GPS:* https://www.google.com/maps?q=${ubicacionCliente.lat},${ubicacionCliente.lng}` : "";
 
-    // Formatear Ticket para WhatsApp
+    // Formatear Ticket para WhatsApp[cite: 7]
     let msgWA = `*🧾 TICKET DE PEDIDO - IKU*%0A`;
     msgWA += `*Cliente:* ${cliente}%0A`;
     msgWA += `*Servicio:* ${tipo.toUpperCase()}%0A`;
@@ -208,19 +209,36 @@ window.enviarPedido = async () => {
 
     try {
         btn.innerText = "Enviando... ⏳";
+        
+        // 3. GUARDAR EN FIREBASE (Siempre ocurre)[cite: 2]
         const docRef = await addDoc(collection(db, "pedidos"), {
-            cliente, tipo, total,
-            items: carrito.flatMap(i => Array(i.cantidad).fill({ nombre: i.nombre, precio: i.precio, excluidos: i.excluidos })),
-            estado: "pendiente", timestamp: serverTimestamp()
+            cliente, 
+            tipo, 
+            total,
+            items: carrito.flatMap(i => Array(i.cantidad).fill({ 
+                nombre: i.nombre, 
+                precio: i.precio, 
+                excluidos: i.excluidos 
+            })),
+            estado: "pendiente", 
+            timestamp: serverTimestamp()
         });
 
-        window.open(`https://wa.me/573017177781?text=${msgWA}`);
+        // 4. LÓGICA DE WHATSAPP CONDICIONAL
+        // Solo abre WhatsApp si es domicilio Y tiene el check marcado
+        if (tipo === 'domicilio' && quiereRespaldo) {
+            window.open(`https://wa.me/573017177781?text=${msgWA}`);
+        }
 
+        // 5. LIMPIEZA Y TRACKER[cite: 7]
         carrito = [];
         actualizarCarrito();
         window.toggleCart();
         btn.innerText = "CONFIRMAR PEDIDO";
-        iniciarTracker(docRef.id);
+        
+        // El cliente siempre verá el tracker en la web, independientemente de WhatsApp
+        iniciarTracker(docRef.id); 
+
     } catch (e) { 
         console.error(e);
         btn.innerText = "Error ❌"; 
