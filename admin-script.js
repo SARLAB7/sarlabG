@@ -9,7 +9,7 @@ import {
 
 // --- ESTADO GLOBAL ---
 let categoriasAbiertas = new Set();
-let menuGlobal = {}, pedidosGlobales = [], idParaEliminar = null;
+let menuGlobal = {}, pedidosGlobales = [], insumosGlobales = [], idParaEliminar = null;
 
 const CORREO_MASTER = "cb01grupo@gmail.com";
 const correosAutorizados = [CORREO_MASTER, "kelly.araujotafur@gmail.com"];
@@ -47,12 +47,15 @@ function escucharInventario() {
         const alertasCocina = document.getElementById('notificaciones-cocina');
         if (!lista) return;
 
+        insumosGlobales = []; // Refrescar lista global para recetas
         let htmlLista = '';
         let htmlAlertas = '';
 
         snap.forEach(docSnap => {
             const i = docSnap.data();
             i.id = docSnap.id;
+            insumosGlobales.push(i);
+
             const esCritico = Number(i.stockActual) <= Number(i.umbralMinimo);
             const colorCard = esCritico ? 'var(--danger)' : 'var(--border)';
             const bgCard = esCritico ? 'rgba(239, 68, 68, 0.1)' : 'var(--card-dark)';
@@ -63,9 +66,9 @@ function escucharInventario() {
                             style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text-muted); cursor: pointer; z-index: 5;">
                         ${ICON_TRASH}
                     </button>
-                    <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})" style="cursor:pointer;">
+                    <div onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unit || i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario})" style="cursor:pointer;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unidad}</span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">${i.unit || i.unidad}</span>
                             ${esCritico ? '<span style="color:var(--danger); font-size:1.2rem; margin-right: 25px;">⚠️</span>' : ''}
                         </div>
                         <strong style="font-size: 1.1rem; display: block; margin: 5px 0; color: var(--white);">${i.nombre}</strong>
@@ -138,16 +141,18 @@ window.eliminarInsumoModal = (id) => {
     document.getElementById('delete-modal').style.display = 'flex'; 
 };
 
-// --- 3. GESTIÓN DE CARTA ---
+// --- 3. GESTIÓN DE CARTA Y RECETAS ---
 function escucharCarta() {
     onSnapshot(collection(db, "platos"), (snap) => {
         const list = document.getElementById('inv-list'); if (!list) return;
         const cats = { diario: { titulo: "Menú del Día", platos: [] }, desayuno: { titulo: "Desayunos", platos: [] }, especial: { titulo: "Especiales", platos: [] }, asado: { titulo: "Asados", platos: [] }, rapida: { titulo: "Comida Rápida", platos: [] }, bebida: { titulo: "Bebidas", platos: [] }, otros: { titulo: "Otros", platos: [] } };
+        
         snap.forEach(d => {
             const it = d.data(); it.id = d.id; 
-            menuGlobal[it.nombre] = it.ingredientes || [];
+            menuGlobal[it.nombre] = it; // Guardar objeto completo incluyendo receta
             if (cats[it.categoria]) cats[it.categoria].platos.push(it); else cats['otros'].platos.push(it);
         });
+
         let h = '';
         for (const k in cats) {
             if (cats[k].platos.length === 0) continue;
@@ -156,7 +161,7 @@ function escucharCarta() {
                 <div class="plato-row" style="background: var(--sidebar); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                     <div><strong style="color:var(--white);">${it.nombre}</strong><br><span style="color:var(--success); font-size:0.9rem;">$${Number(it.precio).toLocaleString()}</span></div>
                     <div style="display:flex; gap:12px;">
-                        <button onclick="editarPlato('${it.id}', '${encodeURIComponent(it.nombre)}', '${it.precio}', '${it.categoria}', '${encodeURIComponent(it.descripcion || '')}', '${(it.ingredientes || []).join(', ')}')" style="color:#3b82f6; background:none; border:none; cursor:pointer;">${ICON_EDIT}</button>
+                        <button onclick="editarPlato('${it.id}', '${encodeURIComponent(it.nombre)}', '${it.precio}', '${it.categoria}', '${encodeURIComponent(it.descripcion || '')}', '${(it.ingredientes || []).join(', ')}', '${encodeURIComponent(JSON.stringify(it.receta || {}))}')" style="color:#3b82f6; background:none; border:none; cursor:pointer;">${ICON_EDIT}</button>
                         <button onclick="eliminarPlatoModal('${it.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">${ICON_TRASH}</button>
                     </div>
                 </div>`).join('');
@@ -167,7 +172,24 @@ function escucharCarta() {
     });
 }
 
-window.editarPlato = (id, n, p, c, d, i) => {
+window.agregarFilaReceta = (insumoId = '', cantidad = '') => {
+    const contenedor = document.getElementById('receta-items');
+    if (!contenedor) return;
+    const div = document.createElement('div');
+    div.className = 'fila-receta';
+    div.style = "display: flex; gap: 8px; margin-bottom: 8px; align-items: center;";
+    let opciones = insumosGlobales.map(i => `<option value="${i.id}" ${i.id === insumoId ? 'selected' : ''}>${i.nombre} (${i.unidad})</option>`).join('');
+    div.innerHTML = `
+        <select class="receta-insumo" style="flex: 2; margin-bottom:0;">
+            <option value="">Seleccionar insumo...</option>${opciones}
+        </select>
+        <input type="number" class="receta-cantidad" placeholder="Cant." value="${cantidad}" style="flex: 1; margin-bottom:0;" step="any">
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:var(--danger); cursor:pointer;">${ICON_X}</button>
+    `;
+    contenedor.appendChild(div);
+};
+
+window.editarPlato = (id, n, p, c, d, i, recetaJson) => {
     document.getElementById('edit-id').value = id; 
     document.getElementById('name').value = decodeURIComponent(n); 
     document.getElementById('price').value = p; 
@@ -176,21 +198,70 @@ window.editarPlato = (id, n, p, c, d, i) => {
     document.getElementById('ingredients').value = i; 
     document.getElementById('f-title').innerText = "Editando Plato"; 
     document.getElementById('btn-cancelar').style.display = 'block';
+
+    const recetaItems = document.getElementById('receta-items');
+    recetaItems.innerHTML = '';
+    const receta = JSON.parse(decodeURIComponent(recetaJson || '{}'));
+    Object.entries(receta).forEach(([insId, cant]) => agregarFilaReceta(insId, cant));
+
     document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
 };
 
-window.cancelarEdicion = () => { document.getElementById('m-form').reset(); document.getElementById('edit-id').value = ''; document.getElementById('f-title').innerText = "Configurar Plato"; document.getElementById('btn-cancelar').style.display = 'none'; };
+window.cancelarEdicion = () => { 
+    document.getElementById('m-form').reset(); 
+    document.getElementById('edit-id').value = ''; 
+    document.getElementById('receta-items').innerHTML = '';
+    document.getElementById('f-title').innerText = "Configurar Plato"; 
+    document.getElementById('btn-cancelar').style.display = 'none'; 
+};
 
 document.getElementById('m-form').onsubmit = async (e) => {
     e.preventDefault();
     const id = document.getElementById('edit-id').value;
-    const datos = { nombre: document.getElementById('name').value, precio: Number(document.getElementById('price').value), categoria: document.getElementById('category').value, descripcion: document.getElementById('desc').value, ingredientes: document.getElementById('ingredients').value.split(',').map(s => s.trim()).filter(s => s !== ''), timestamp: serverTimestamp() };
+    const receta = {};
+    document.querySelectorAll('.fila-receta').forEach(fila => {
+        const insId = fila.querySelector('.receta-insumo').value;
+        const cant = Number(fila.querySelector('.receta-cantidad').value);
+        if (insId && cant > 0) receta[insId] = cant;
+    });
+
+    const datos = { 
+        nombre: document.getElementById('name').value, 
+        precio: Number(document.getElementById('price').value), 
+        categoria: document.getElementById('category').value, 
+        descripcion: document.getElementById('desc').value, 
+        ingredientes: document.getElementById('ingredients').value.split(',').map(s => s.trim()).filter(s => s !== ''), 
+        receta: receta,
+        timestamp: serverTimestamp() 
+    };
     if(!id) datos.disponible = true;
     id ? await updateDoc(doc(db, "platos", id), datos) : await addDoc(collection(db, "platos"), datos);
     window.cancelarEdicion();
 };
 
-// --- 4. GESTIÓN DE PEDIDOS ---
+// --- 4. GESTIÓN DE PEDIDOS Y DESCUENTO DE STOCK ---
+async function procesarDescuentoStock(pedidoId) {
+    const pedido = pedidosGlobales.find(p => p.id === pedidoId);
+    if (!pedido) return;
+
+    for (const item of pedido.items) {
+        const platoRef = menuGlobal[item.nombre];
+        if (platoRef && platoRef.receta) {
+            for (const [insumoId, cantidad] of Object.entries(platoRef.receta)) {
+                const insumoDoc = doc(db, "inventario", insumoId);
+                await updateDoc(insumoDoc, { stockActual: increment(-cantidad) });
+            }
+        }
+    }
+}
+
+window.actualizarEstado = async (id, estado) => {
+    if (estado === 'preparando') {
+        await procesarDescuentoStock(id);
+    }
+    await updateDoc(doc(db, "pedidos", id), { estado });
+};
+
 function escucharPedidos() {
     onSnapshot(query(collection(db, "pedidos"), orderBy("timestamp", "desc")), (snap) => {
         pedidosGlobales = [];
@@ -227,7 +298,6 @@ if(btnConfirmar) {
     };
 }
 
-window.actualizarEstado = async (id, estado) => await updateDoc(doc(db, "pedidos", id), { estado });
 window.cerrarPedido = async (id, m) => await updateDoc(doc(db, "pedidos", id), { estado: 'listo', metodoPago: m });
 window.revertirPedido = async (id) => await updateDoc(doc(db, "pedidos", id), { estado: 'preparando', metodoPago: null });
 window.rechazarPedido = (id) => { idParaEliminar = "RECHAZAR:" + id; document.getElementById('modal-title').innerHTML = `<span style="color:var(--danger)">¿Rechazar pedido?</span>`; document.getElementById('delete-modal').style.display = 'flex'; };
@@ -285,7 +355,7 @@ window.actualizarMétricas = function() {
                 if(p.metodoPago === 'efectivo') tEfectivo += Number(p.total);
                 p.items.forEach(item => {
                     ventasPlatos[item.nombre] = (ventasPlatos[item.nombre] || 0) + 1;
-                    const ingBase = menuGlobal[item.nombre] || [], excluidos = item.excluidos || [];
+                    const ingBase = menuGlobal[item.nombre]?.ingredientes || [], excluidos = item.excluidos || [];
                     ingBase.forEach(ing => { if (!excluidos.includes(ing)) usoIngredientes[ing] = (usoIngredientes[ing] || 0) + 1; });
                 });
             }
