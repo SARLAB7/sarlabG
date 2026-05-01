@@ -421,7 +421,13 @@ window.toggleCategoria = (listaId, chevronId) => { const l = document.getElement
 window.actualizarSelectoresInsumos = () => { const opts = insumosGlobales.map(i => `<option value="${i.id}">${i.nombre}</option>`).join(''); document.getElementById('compra-insumo').innerHTML = opts; document.getElementById('merma-insumo').innerHTML = opts; };
 window.abrirModalCompra = () => { window.actualizarSelectoresInsumos(); document.getElementById('modal-compra').style.display = 'flex'; };
 window.abrirModalMerma = () => { window.actualizarSelectoresInsumos(); document.getElementById('modal-merma').style.display = 'flex'; };
-window.cerrarModales = () => { document.getElementById('modal-compra').style.display = 'none'; document.getElementById('modal-merma').style.display = 'none'; document.getElementById('f-compra')?.reset(); document.getElementById('f-merma')?.reset(); };
+window.cerrarModales = () => { 
+    document.getElementById('modal-compra').style.display = 'none'; 
+    document.getElementById('modal-merma').style.display = 'none'; 
+    if(document.getElementById('modal-balance')) document.getElementById('modal-balance').style.display = 'none';
+    document.getElementById('f-compra')?.reset(); 
+    document.getElementById('f-merma')?.reset(); 
+};
 window.imprimirComanda = (ps) => { const p = JSON.parse(decodeURIComponent(ps)); const div = document.createElement('div'); div.innerHTML = `<div id="ticket-impresion"><h2 style="text-align:center;">IKU</h2><hr><p><strong>Cliente:</strong> ${p.cliente}</p><hr><ul>${p.items.map(i => `<li>${i.nombre}</li>`).join('')}</ul><hr><h3 style="text-align:right;">Total: $${Number(p.total).toLocaleString()}</h3></div>`; document.body.appendChild(div); window.print(); document.body.removeChild(div); };
 window.confirmarReinicioTotal = () => { idParaEliminar = "MASTER"; document.getElementById('modal-title').innerText = '¿REINICIAR TODO?'; document.getElementById('delete-modal').style.display = 'flex'; };
 
@@ -541,5 +547,75 @@ window.generarBalanceDiarioInventario = async () => {
 
     } catch (error) {
         console.error("Error al generar balance:", error);
+    }
+};
+// --- 7. BALANCE DIARIO DE INVENTARIO ---
+window.generarBalanceDiarioInventario = async () => {
+    const ahora = new Date();
+    const inicioDia = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    
+    try {
+        const tbody = document.getElementById('tabla-balance-body');
+        if(!tbody) return;
+        
+        // 1. Mostrar estado de carga y abrir el modal
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">Calculando balance en vivo...</td></tr>';
+        document.getElementById('modal-balance').style.display = 'flex';
+
+        // 2. Traer movimientos de HOY desde el Kardex
+        const q = query(collection(db, "kardex"), where("timestamp", ">=", inicioDia));
+        const snap = await getDocs(q);
+        
+        let balance = {}; 
+        let huboMovimientos = false;
+        
+        snap.forEach(d => {
+            huboMovimientos = true;
+            const mov = d.data();
+            if (!balance[mov.insumoId]) {
+                const insumoReal = insumosGlobales.find(i => i.id === mov.insumoId);
+                balance[mov.insumoId] = { 
+                    nombre: insumoReal ? insumoReal.nombre : 'Insumo Eliminado', 
+                    entradas: 0, 
+                    salidas: 0,
+                    stockActual: insumoReal ? insumoReal.stockActual : 0,
+                    unidad: insumoReal ? insumoReal.unidad : ''
+                };
+            }
+            if (mov.tipo === 'entrada') balance[mov.insumoId].entradas += mov.cantidad;
+            if (mov.tipo === 'salida') balance[mov.insumoId].salidas += mov.cantidad;
+        });
+
+        // 3. Renderizar resultados en la tabla
+        if (!huboMovimientos) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--text-muted);">No se han registrado entradas, ventas ni mermas el día de hoy.</td></tr>';
+            return;
+        }
+
+        let filasHTML = '';
+        for (const id in balance) {
+            const b = balance[id];
+            filasHTML += `
+                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                    <td style="padding: 16px 12px; font-weight: 500;">
+                        ${b.nombre} <br><span style="font-size:0.65rem; color:var(--text-muted); text-transform: uppercase;">${b.unidad}</span>
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center; color: #22c55e; font-weight: bold;">
+                        ${b.entradas > 0 ? '+' : ''}${b.entradas.toLocaleString('es-CO')}
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center; color: #ef4444; font-weight: bold;">
+                        ${b.salidas > 0 ? '-' : ''}${b.salidas.toLocaleString('es-CO')}
+                    </td>
+                    <td style="padding: 16px 12px; text-align: right; font-weight: 800; color: var(--white); font-size: 1.1rem;">
+                        ${b.stockActual.toLocaleString('es-CO')}
+                    </td>
+                </tr>
+            `;
+        }
+        tbody.innerHTML = filasHTML;
+
+    } catch (error) {
+        console.error("Error al generar balance:", error);
+        document.getElementById('tabla-balance-body').innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color: var(--danger);">Hubo un error de conexión al cargar los datos.</td></tr>';
     }
 };
