@@ -161,48 +161,53 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     body { overflow-y: auto; height: auto; }
     #admin-panel { flex-direction: column; height: auto; }
     
-    /* 1. Barra superior desplazable (swipe) */
+    /* 1. Barra superior: Ahora permite que los elementos bajen de línea (wrap) */
     .sidebar { 
         flex-direction: row; 
+        flex-wrap: wrap; /* LA MAGIA: Si no caben, forman una nueva fila */
         width: 100%; 
         max-width: 100%; 
         padding: 0; 
-        overflow-x: auto; 
         border-right: none; 
-        border-bottom: 1px solid var(--border); 
-        -webkit-overflow-scrolling: touch; /* Scroll fluido en iOS/Android */
+        background: var(--sidebar);
     }
-    
-    /* Ocultar la barra de desplazamiento visual para que se vea más limpio */
-    .sidebar::-webkit-scrollbar { display: none; }
-    .sidebar { -ms-overflow-style: none; scrollbar-width: none; }
     
     .sidebar h2 { display: none; }
     
-    /* 2. La magia para que NO se apiñen */
+    /* 2. Los botones se convierten en "Cajitas" tipo App */
     .nav-item { 
-        flex-direction: row; /* Icono y texto uno al lado del otro */
-        padding: 12px 16px; 
-        font-size: 0.75rem; 
-        min-width: max-content; /* IMPORTANTE: El botón toma el ancho exacto del texto */
-        flex-shrink: 0; /* IMPORTANTE: Evita que flexbox aplaste el botón */
-        border-right: none; 
-        border-bottom: 3px solid transparent; 
+        flex-direction: column; /* Icono arriba, texto abajo */
+        padding: 12px 5px; 
+        font-size: 0.65rem; 
+        flex: 1 1 30%; /* Ocupan un tercio de la pantalla (3 por fila) */
+        text-align: center; 
+        justify-content: center;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        white-space: normal; /* Permite que textos largos se acomoden */
     }
     
     .nav-item.active { 
-        border-right: none; 
         border-bottom: 3px solid var(--accent-yellow); 
+        background: rgba(255, 204, 0, 0.05);
     }
     
-    /* 3. Evitar que el contenedor del botón de Cerrar Sesión se rompa */
+    /* 3. Contenedor de "Cerrar Sesión" ocupa su propia fila al final */
     .sidebar > div:last-child {
         display: flex;
-        flex-shrink: 0;
+        width: 100%; 
         margin-top: 0 !important;
     }
     
-    .main-content { padding: 20px; height: auto; overflow: visible; }
+    .sidebar > div:last-child .nav-item {
+        flex-direction: row; /* Icono al lado del texto para este botón especial */
+        flex: 1; /* Ocupa todo el ancho de la pantalla */
+        border-right: none;
+        font-size: 0.8rem;
+        padding: 15px;
+    }
+    
+    .main-content { padding: 15px; height: auto; overflow: visible; }
     .bento-grid-stats { grid-template-columns: 1fr; }
     .span-2 { grid-column: span 1; }
     .admin-sarlab-credit { display: none; }
