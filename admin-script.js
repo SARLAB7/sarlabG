@@ -12,8 +12,7 @@ let categoriasAbiertas = new Set();
 let menuGlobal = {}, pedidosGlobales = [], insumosGlobales = [], idParaEliminar = null;
 
 const CORREO_MASTER = "cb01grupo@gmail.com";
-const correosAutorizados = [CORREO_MASTER, "kelly.araujotafur@gmail.com"];
-const correosAutorizados = [CORREO_MASTER, "jesusmanuelcd10@gmail.com"];
+const correosAutorizados = [CORREO_MASTER, "kelly.araujotafur@gmail.com", "jesusmanuelcd10@gmail.com"];
 const ICON_PREPARE = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`;
 const ICON_X = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 const ICON_EDIT = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
