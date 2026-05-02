@@ -122,7 +122,7 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
 }
 
 #busqueda-inventario:focus {
-    width: 320px; /* Se expande un poco al escribir */
+    /* width: 320px;  <-- ELIMINA ESTA LÍNEA */
     border-color: var(--accent-yellow);
     box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
 }
