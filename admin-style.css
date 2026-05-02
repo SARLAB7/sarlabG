@@ -303,6 +303,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
         height: auto !important;
         text-align: center;
         justify-content: center;
+       white-space: nowrap; /* Evita que el texto del botón se parta en dos líneas */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Si el texto no cabe, pone puntos suspensivos elegantemente */
     }
 
     /* El tercer botón (Merma) ocupará el ancho completo de la cuadrícula si es necesario */
