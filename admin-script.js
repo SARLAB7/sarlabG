@@ -461,6 +461,7 @@ document.getElementById('m-form').onsubmit = async (e) => {
         const cant = Number(fila.querySelector('.receta-cantidad').value);
         if (insId && cant > 0) receta[insId] = cant;
     });
+    
     const datos = { 
         nombre: document.getElementById('name').value, 
         precio: Number(document.getElementById('price').value), 
@@ -470,9 +471,17 @@ document.getElementById('m-form').onsubmit = async (e) => {
         receta: receta,
         timestamp: serverTimestamp() 
     };
+    
     if(!id) datos.disponible = true;
-    id ? await updateDoc(doc(db, "platos", id), datos) : await addDoc(collection(db, "platos"), datos);
-    window.cancelarEdicion();
+    
+    try {
+        id ? await updateDoc(doc(db, "platos", id), datos) : await addDoc(collection(db, "platos"), datos);
+        mostrarNotificacion("Plato guardado con éxito");
+        window.cancelarEdicion();
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion("Error al guardar el plato", "error");
+    }
 };
 
 window.agregarFilaReceta = (insId = '', cant = '') => {
