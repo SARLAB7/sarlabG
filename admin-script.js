@@ -777,21 +777,21 @@ window.abrirSeccionBalance = async () => {
             }
 
             filasHTML += `
-                <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
-                    <td style="padding: 16px 12px; font-weight: 500; color: var(--white);">
-                        ${b.nombre} <br><span style="font-size:0.65rem; color:var(--text-muted); text-transform: uppercase;">${b.unidad}</span>
-                    </td>
-                    <td style="padding: 16px 12px; text-align: center; color: #22c55e; font-weight: bold;">
-                        ${b.entradas > 0 ? '+' : ''}${b.entradas.toLocaleString('es-CO')}
-                    </td>
-                    <td style="padding: 16px 12px; text-align: center; color: #ef4444; font-weight: bold;">
-                        ${b.salidas > 0 ? '-' : ''}${b.salidas.toLocaleString('es-CO')}
-                    </td>
-                    <td style="padding: 16px 12px; text-align: right;">
-                        ${celdaStockEditable}
-                    </td>
-                </tr>
-            `;
+    <tr class="responsive-row" style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+        <td data-label="Insumo" style="padding: 16px 12px; font-weight: 500; color: var(--white);">
+            ${b.nombre} <br><span style="font-size:0.65rem; color:var(--text-muted); text-transform: uppercase;">${b.unidad}</span>
+        </td>
+        <td data-label="Entradas (+)" style="padding: 16px 12px; text-align: center; color: #22c55e; font-weight: bold;">
+            ${b.entradas > 0 ? '+' : ''}${b.entradas.toLocaleString('es-CO')}
+        </td>
+        <td data-label="Salidas (-)" style="padding: 16px 12px; text-align: center; color: #ef4444; font-weight: bold;">
+            ${b.salidas > 0 ? '-' : ''}${b.salidas.toLocaleString('es-CO')}
+        </td>
+        <td data-label="Stock Final" style="padding: 16px 12px; text-align: right;">
+            ${celdaStockEditable}
+        </td>
+    </tr>
+`;
         });
         tbody.innerHTML = filasHTML;
 
