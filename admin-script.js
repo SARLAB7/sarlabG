@@ -574,12 +574,21 @@ window.confirmarAccionModal = async () => {
     const textoOriginal = btn.innerText;
     
     try {
-        btn.innerText = "Procesando..."; 
+        btn.innerText = "Limpiando Sistema..."; 
         btn.disabled = true;
 
         if (idParaEliminar === "MASTER") {
-            const ps = pedidosGlobales.map(p => deleteDoc(doc(db, "pedidos", p.id))); 
-            await Promise.all(ps);
+            // Lista de todas las colecciones que quieres limpiar
+            const coleccionesParaLimpiar = ["pedidos", "platos", "inventario", "kardex", "cierres"];
+            
+            for (const nombreCol of coleccionesParaLimpiar) {
+                const snap = await getDocs(collection(db, nombreCol));
+                const promesasBorrado = snap.docs.map(documento => deleteDoc(doc(db, nombreCol, documento.id)));
+                await Promise.all(promesasBorrado);
+            }
+            
+            mostrarNotificacion("Limpieza total completada. Sistema listo para el cliente.", "success");
+            
         } else if (idParaEliminar?.startsWith("RECHAZAR:")) {
             const pedidoId = idParaEliminar.split(":")[1];
             await updateDoc(doc(db, "pedidos", pedidoId), { estado: 'rechazado' });
@@ -594,8 +603,8 @@ window.confirmarAccionModal = async () => {
         document.getElementById('delete-modal').style.display = 'none';
 
     } catch (error) {
-        console.error("Error al ejecutar la acción:", error);
-        alert("Hubo un error al conectar con la base de datos.");
+        console.error("Error en el reinicio total:", error);
+        mostrarNotificacion("Hubo un fallo en la conexión con la base de datos", "error");
     } finally {
         btn.innerText = textoOriginal;
         btn.disabled = false;
