@@ -65,7 +65,12 @@
                 <option value="semana">Últimos 7 días</option>
                 <option value="todo">Todo el historial</option>
             </select>
-            <button onclick="volverInventario()" class="btn-action btn-outline">Volver</button>
+<button 
+    onclick="cambiarVista('v-inventario', document.querySelector('[onclick*=\'v-inventario\']'))" 
+    class="btn-action btn-outline" 
+    style="width: auto; padding: 10px 25px;">
+    Volver
+</button>
         </div>
     </div>
     <div class="dashboard-table-container" style="background: var(--card-dark); border: 1px solid var(--border); border-radius: 16px;">
