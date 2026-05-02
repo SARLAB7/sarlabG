@@ -230,6 +230,52 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 /* =========================================
    RESPONSIVE
    ========================================= */
+@media (max-width: 768px) {
+    /* Ocultamos el encabezado real de la tabla */
+    #v-balance thead {
+        display: none;
+    }
+
+    /* Cada fila se convierte en una "tarjeta" */
+    #v-balance tr.responsive-row {
+        display: block;
+        background: var(--card-dark);
+        margin-bottom: 15px;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    /* Cada celda se comporta como una línea de la tarjeta */
+    #v-balance td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right !important;
+        padding: 8px 10px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    #v-balance td:last-child {
+        border-bottom: none;
+    }
+
+    /* Insertamos el título (Insumo, Entradas, etc.) al lado izquierdo */
+    #v-balance td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--accent-yellow);
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        text-align: left;
+    }
+    
+    /* Ajuste para que el input no se vea gigante en móvil */
+    #v-balance td input {
+        margin: 0 !important;
+        width: 100px !important;
+    }
+}
 @media (max-width: 1024px) {
     .bento-grid-stats { grid-template-columns: repeat(2, 1fr); }
 }
