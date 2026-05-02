@@ -176,7 +176,30 @@ function escucharInventario() {
         actualizarSelectoresInsumos();
     });
 }
-
+window.renderListaInsumosBento = () => {
+    const contenedor = document.getElementById('lista-insumos');
+    if (!contenedor) return;
+    
+    let html = '';
+    insumosGlobales.forEach(i => {
+        // Verificamos si el stock es menor o igual al mínimo para poner la tarjeta en rojo
+        const esBajo = Number(i.stockActual) <= Number(i.umbralMinimo);
+        
+        html += `
+            <div class="card-bento ${esBajo ? 'card-danger' : ''}" 
+                 onclick="editarInsumo('${i.id}', '${encodeURIComponent(i.nombre)}', ${i.stockActual}, '${i.unidad}', ${i.umbralMinimo}, ${i.costoUnitario}, ${i.factor})"
+                 style="cursor: pointer;">
+                <div class="card-label">${i.nombre}</div>
+                <div class="big-number-small">
+                    ${i.stockActual} 
+                    <span style="font-size: 0.9rem; opacity: 0.6;">${i.unidad === 'gramos' ? 'g' : i.unidad === 'ml' ? 'ml' : 'und'}</span>
+                </div>
+                <div class="card-sub">Alerta: ${i.umbralMinimo}</div>
+            </div>`;
+    });
+    
+    contenedor.innerHTML = html || '<p style="color:var(--text-muted); padding: 20px;">No hay insumos creados aún.</p>';
+};
 // ESTA FUNCIÓN VA AFUERA, SOLA:
 window.renderInventarioTable = () => {
     const tbody = document.getElementById('tabla-inventario-dinamica');
