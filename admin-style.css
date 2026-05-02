@@ -136,17 +136,28 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
     display: inline-block;
 }
 /* Mejora para el encabezado de la tabla de inventario */
-.dashboard-table-container thead tr {
-    background: rgba(255, 255, 255, 0.02) !important;
-    backdrop-filter: blur(5px);
-    border-bottom: 2px solid var(--border) !important;
+/* Estilizar el contenedor de la tabla para que la barra no sea tosca */
+.dashboard-table-container::-webkit-scrollbar {
+    height: 6px; /* La hace mucho más delgada y elegante */
+    width: 6px;
 }
 
-.dashboard-table-container th {
-    color: var(--accent-yellow) !important;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
+/* El fondo por donde se desliza la barra */
+.dashboard-table-container::-webkit-scrollbar-track {
+    background: var(--bg-dark); /* Usa tu fondo oscuro */
+    border-radius: 10px;
+}
+
+/* La pieza que el usuario arrastra */
+.dashboard-table-container::-webkit-scrollbar-thumb {
+    background: var(--accent-yellow); /* Tu amarillo característico */
+    border-radius: 10px;
+    border: 1px solid var(--bg-dark); /* Crea un pequeño margen visual */
+}
+
+/* Efecto visual cuando el usuario pasa el mouse por encima */
+.dashboard-table-container::-webkit-scrollbar-thumb:hover {
+    background: #eab308; /* Un tono de amarillo un poco más oscuro */
 }
 /* =========================================
    COMPONENTES BENTO (TARJETAS)
