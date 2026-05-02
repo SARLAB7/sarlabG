@@ -267,139 +267,84 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
    RESPONSIVE 
    ========================================= */
 @media (max-width: 768px) {
+    /* 1. Layout: Pantalla completa sin scroll raro */
+    body { overflow: hidden; height: 100vh; }
+    #admin-panel { flex-direction: row; }
 
-      /* Contenedor de Logout y Créditos en móvil */
-    .sidebar > div:last-child {
-        display: flex;
-        flex-direction: column !important; /* Apilados verticalmente */
-        width: 100% !important;
-        background: rgba(0, 0, 0, 0.15); /* Fondo ligeramente distinto para separar */
-        border-top: 1px solid var(--border);
-        padding: 10px 0 !important;
-        margin-top: 5px !important;
-    }
-
-    /* Botón de Cerrar Sesión sutil */
-    #logout-btn {
-        font-size: 0.75rem !important; /* Más pequeño */
-        padding: 8px !important;
-        justify-content: center;
-        opacity: 0.7;
-        color: var(--danger) !important;
-        border: none !important; /* Quitamos bordes de la cuadrícula */
-        background: transparent !important;
-    }
-
-    /* Créditos SARLAB sutiles */
-    .admin-sarlab-credit {
-        display: block !important; /* Lo reactivamos para móvil */
-        font-size: 0.6rem !important; /* Tamaño mínimo legible */
-        text-align: center;
-        padding: 0 0 10px 0 !important;
-        opacity: 0.4; /* Muy sutil */
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-}
-    /* 1. Base y Layout */
-    body { overflow-y: auto; height: auto; }
-    #admin-panel { flex-direction: column; height: auto; }
-    
-    .main-content { 
-        padding: 15px !important; /* Menos espacio en los bordes para ganar pantalla */
-        height: auto; 
-        overflow: visible; 
-    }
-
-    /* 2. Títulos Proporcionales */
-    .main-content h2 { 
-        font-size: 1.5rem !important; 
-        margin-bottom: 20px; 
-    }
-
-    /* 3. Sidebar transformado en Menu Superior */
-    .sidebar { 
-        flex-direction: row; 
-        flex-wrap: wrap; 
-        width: 100%; 
-        max-width: 100%; 
-        padding: 0; 
-        border-right: none; 
-        border-bottom: 1px solid var(--border);
-    }
-    .sidebar h2 { display: none; }
-    
-    .nav-item { 
-        flex-direction: column; 
-        padding: 12px 5px; 
-        font-size: 0.65rem; 
-        flex: 1 1 30%; 
-        text-align: center; 
+    /* 2. Barra Lateral Minimalista (Estilo App) */
+    .sidebar {
+        width: 70px !important; /* Ancho fijo para iconos */
+        min-width: 70px !important;
+        height: 100vh;
+        background: rgba(22, 24, 29, 0.8) !important; /* Transparencia */
+        backdrop-filter: blur(10px); /* Efecto Glassmorphism */
+        position: fixed;
+        left: 0;
+        top: 0;
+        padding: 20px 0;
         border-right: 1px solid var(--border);
-        border-bottom: 1px solid var(--border);
-    }
-    
-    .nav-item.active { border-bottom: 3px solid var(--accent-yellow); }
-
-    /* 4. TABLA TRANSFORMADA A TARJETAS (Distribución Total) */
-    .dashboard-table-container { 
-        overflow-x: hidden !important;
-        width: 100% !important; 
-    }
-
-    .dashboard-table-container table { 
-        min-width: unset !important; 
-        width: 100% !important; /* Fuerza a la tabla a expandirse */
-        display: block;
-    }
-
-    #v-balance thead { display: none; }
-
-    #v-balance tr.responsive-row {
-        display: block;
-        width: 100% !important; /* La tarjeta ahora cubre todo el ancho del recuadro */
-        background: var(--card-dark);
-        margin-bottom: 20px;
-        border: 1px solid var(--border) !important;
-        border-radius: 20px;
-        padding: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-
-    #v-balance td {
-        display: flex !important; /* Activamos Flexbox */
-        justify-content: space-between !important; /* ESTO es lo que separa el título del dato */
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        width: 100% !important; /* Obliga a la línea a ser ancha */
-        padding: 12px 0 !important; 
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        z-index: 1000;
     }
 
-    #v-balance td:last-child { border-bottom: none; }
-
-    /* Títulos amarillos (Headers laterales) */
-    #v-balance td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        color: var(--accent-yellow);
-        text-transform: uppercase;
-        font-size: 0.7rem;
-        text-align: left;
+    /* Ocultar el texto de los botones en móvil */
+    .nav-item span, .sidebar h2 {
+        display: none;
     }
 
-    /* Datos (Lo que era el contenido de la celda) */
-    #v-balance td > div, 
-    #v-balance td > span,
-    #v-balance td input {
-        font-size: 0.95rem !important;
-        text-align: right !important;
-        color: var(--white);
-        margin: 0 !important;
+    /* Botones centrados y circulares */
+    .nav-item {
+        width: 50px;
+        height: 50px;
+        padding: 0;
+        margin-bottom: 15px;
+        justify-content: center;
+        border-radius: 12px;
+        border: none !important;
     }
 
-    /* 5. Otros elementos */
-    .bento-grid-stats { grid-template-columns: 1fr; }
-    .span-2 { grid-column: span 1; }
+    .nav-item.active {
+        background: var(--accent-yellow) !important;
+        color: #000 !important;
+        box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+    }
+
+    /* 3. Contenido Principal: Desplazado para no chocar con la barra */
+    .main-content {
+        margin-left: 70px; /* El mismo ancho de la sidebar */
+        width: calc(100% - 70px);
+        padding: 20px !important;
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    /* 4. Pie de Barra (Logout y Firma) */
+    .sidebar > div:last-child {
+        margin-top: auto;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        padding-bottom: 20px;
+    }
+
+    #logout-btn {
+        color: var(--danger) !important;
+        opacity: 0.8;
+    }
+
+    /* Firma SARLAB vertical o muy sutil */
+    .admin-sarlab-credit {
+        display: block !important;
+        writing-mode: vertical-rl; /* Texto hacia arriba */
+        transform: rotate(180deg);
+        font-size: 0.5rem !important;
+        opacity: 0.3;
+        margin-top: 10px;
+    }
 }
 /* =========================================
    IMPRESIÓN TICKET
