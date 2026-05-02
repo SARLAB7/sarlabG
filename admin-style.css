@@ -267,83 +267,92 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
    RESPONSIVE 
    ========================================= */
 @media (max-width: 768px) {
-    /* 1. Layout: Pantalla completa sin scroll raro */
+    /* 1. Ajuste General del Layout */
     body { overflow: hidden; height: 100vh; }
     #admin-panel { flex-direction: row; }
 
-    /* 2. Barra Lateral Minimalista (Estilo App) */
+    /* 2. Barra Lateral Minimalista (Glassmorphism) */
     .sidebar {
-        width: 70px !important; /* Ancho fijo para iconos */
+        width: 70px !important;
         min-width: 70px !important;
+        max-width: 70px !important;
         height: 100vh;
-        background: rgba(22, 24, 29, 0.8) !important; /* Transparencia */
-        backdrop-filter: blur(10px); /* Efecto Glassmorphism */
+        background: rgba(22, 24, 29, 0.7) !important; /* Transparencia sutil */
+        backdrop-filter: blur(15px); /* Desenfoque de cristal */
         position: fixed;
         left: 0;
         top: 0;
         padding: 20px 0;
-        border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
         align-items: center;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
         z-index: 1000;
     }
 
-    /* Ocultar el texto de los botones en móvil */
-    .nav-item span, .sidebar h2 {
-        display: none;
+    /* Ocultamos textos y el logo grande */
+    .sidebar h2, .nav-item span { display: none; }
+    
+    /* Logo pequeño para móvil */
+    .sidebar-logo {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--accent-yellow);
+        margin-bottom: 30px;
     }
 
-    /* Botones centrados y circulares */
+    /* 3. Botones de Navegación (Iconos) */
     .nav-item {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         padding: 0;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        display: flex;
         justify-content: center;
+        align-items: center;
         border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border: none !important;
     }
 
+    /* Efecto activo: Círculo/Cuadrado resaltado */
     .nav-item.active {
         background: var(--accent-yellow) !important;
         color: #000 !important;
-        box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(255, 204, 0, 0.2);
     }
 
-    /* 3. Contenido Principal: Desplazado para no chocar con la barra */
+    .nav-item:not(.active):hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* 4. Contenido Principal */
     .main-content {
-        margin-left: 70px; /* El mismo ancho de la sidebar */
+        margin-left: 70px; /* Espacio para la barra lateral fija */
         width: calc(100% - 70px);
         padding: 20px !important;
         height: 100vh;
         overflow-y: auto;
     }
 
-    /* 4. Pie de Barra (Logout y Firma) */
-    .sidebar > div:last-child {
+    /* 5. Footer de la barra */
+    .sidebar-footer {
         margin-top: auto;
-        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 20px;
+        gap: 15px;
         padding-bottom: 20px;
     }
 
-    #logout-btn {
-        color: var(--danger) !important;
-        opacity: 0.8;
-    }
-
-    /* Firma SARLAB vertical o muy sutil */
     .admin-sarlab-credit {
         display: block !important;
-        writing-mode: vertical-rl; /* Texto hacia arriba */
-        transform: rotate(180deg);
-        font-size: 0.5rem !important;
+        font-size: 0.5rem;
+        font-weight: 700;
+        letter-spacing: 1px;
         opacity: 0.3;
-        margin-top: 10px;
+        writing-mode: vertical-rl; /* Firma elegante en vertical */
+        transform: rotate(180deg);
     }
 }
 /* =========================================
