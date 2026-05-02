@@ -54,7 +54,34 @@
                     </div>
                 </div>
             </section>
-
+<!-- SECCIÓN BALANCE (CUADRE DIARIO) -->
+<section id="v-balance" class="view-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Cuadre de Inventario</h2>
+        <div style="display: flex; gap: 10px;">
+            <select id="filtro-balance" onchange="abrirSeccionBalance()" style="width: auto; margin-bottom: 0;">
+                <option value="hoy">Hoy</option>
+                <option value="ayer">Ayer</option>
+                <option value="semana">Últimos 7 días</option>
+                <option value="todo">Todo el historial</option>
+            </select>
+            <button onclick="volverInventario()" class="btn-action btn-outline">Volver</button>
+        </div>
+    </div>
+    <div class="dashboard-table-container" style="background: var(--card-dark); border: 1px solid var(--border); border-radius: 16px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="color: var(--accent-yellow); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 16px;">Insumo</th>
+                    <th style="padding: 16px; text-align: center;">Entradas (+)</th>
+                    <th style="padding: 16px; text-align: center;">Salidas (-)</th>
+                    <th style="padding: 16px; text-align: right;">Stock Final</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-balance-seccion"></tbody>
+        </table>
+    </div>
+</section>
             <!-- SECCIÓN CARTA -->
             <section id="v-carta" class="view-section">
                 <div style="display: flex; gap: 30px; flex-wrap: wrap-reverse;">
@@ -83,8 +110,8 @@
     </div>
     <div id="receta-items" style="display: flex; flex-direction: column; gap: 8px;"></div>
 </div>
-                                <div style="display: flex; gap: 10px;">
-    <button type="submit" class="btn-action btn-primary" style="flex: 2;">Guardar Plato</button>
+            <div style="display: flex; gap: 10px;">
+    <button type="submit" class="btn-action btn-primary" style="flex: 3;">Guardar Plato</button>
     <button type="button" id="btn-cancelar" onclick="window.cancelarEdicion()" style="display: none; flex: 1; background: var(--danger); color: white;" class="btn-action">✕</button>
 </div>
                             </form>
