@@ -267,6 +267,40 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
    RESPONSIVE 
    ========================================= */
 @media (max-width: 768px) {
+
+      /* Contenedor de Logout y Créditos en móvil */
+    .sidebar > div:last-child {
+        display: flex;
+        flex-direction: column !important; /* Apilados verticalmente */
+        width: 100% !important;
+        background: rgba(0, 0, 0, 0.15); /* Fondo ligeramente distinto para separar */
+        border-top: 1px solid var(--border);
+        padding: 10px 0 !important;
+        margin-top: 5px !important;
+    }
+
+    /* Botón de Cerrar Sesión sutil */
+    #logout-btn {
+        font-size: 0.75rem !important; /* Más pequeño */
+        padding: 8px !important;
+        justify-content: center;
+        opacity: 0.7;
+        color: var(--danger) !important;
+        border: none !important; /* Quitamos bordes de la cuadrícula */
+        background: transparent !important;
+    }
+
+    /* Créditos SARLAB sutiles */
+    .admin-sarlab-credit {
+        display: block !important; /* Lo reactivamos para móvil */
+        font-size: 0.6rem !important; /* Tamaño mínimo legible */
+        text-align: center;
+        padding: 0 0 10px 0 !important;
+        opacity: 0.4; /* Muy sutil */
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+}
     /* 1. Base y Layout */
     body { overflow-y: auto; height: auto; }
     #admin-panel { flex-direction: column; height: auto; }
