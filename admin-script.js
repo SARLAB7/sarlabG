@@ -498,7 +498,7 @@ document.getElementById('m-form').onsubmit = async (e) => {
     if(!id) datos.disponible = true;
     
     try {
-        id ? await updateDoc(doc(db, "platos", id), datos) : await addDoc(collection(db, "platos"), datos);
+        id ? await updateDoc(doc(doc(db, "platos", id)), datos) : await addDoc(collection(db, "platos"), datos);
         mostrarNotificacion("Plato guardado con éxito");
         window.cancelarEdicion();
     } catch (error) {
