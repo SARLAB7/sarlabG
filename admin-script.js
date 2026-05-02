@@ -650,7 +650,7 @@ window.actualizarStockFisico = async (idInsumo, nuevoStock, stockAnterior, nombr
     }
 };
 
-window.abrirSeccionBalance = async () => {window.abrirSeccionBalance = async () => {
+window.abrirSeccionBalance = async () => {
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
     document.getElementById('v-balance').classList.add('active');
     
