@@ -135,29 +135,66 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
     letter-spacing: 0.5px;
     display: inline-block;
 }
-/* Mejora para el encabezado de la tabla de inventario */
-/* Estilizar el contenedor de la tabla para que la barra no sea tosca */
-.dashboard-table-container::-webkit-scrollbar {
-    height: 6px; /* La hace mucho más delgada y elegante */
-    width: 6px;
+/* 4. TABLA TRANSFORMADA A TARJETAS (Distribución Total) */
+.dashboard-table-container { 
+    overflow-x: hidden !important;
+    width: 100% !important; /* Asegura que el contenedor use todo el espacio */
+    padding: 0 !important;
 }
 
-/* El fondo por donde se desliza la barra */
-.dashboard-table-container::-webkit-scrollbar-track {
-    background: var(--bg-dark); /* Usa tu fondo oscuro */
-    border-radius: 10px;
+.dashboard-table-container table { 
+    min-width: unset !important; 
+    width: 100% !important; /* Fuerza a la tabla a estirarse */
+    display: block; /* Permite que se comporte como bloque */
 }
 
-/* La pieza que el usuario arrastra */
-.dashboard-table-container::-webkit-scrollbar-thumb {
-    background: var(--accent-yellow); /* Tu amarillo característico */
-    border-radius: 10px;
-    border: 1px solid var(--bg-dark); /* Crea un pequeño margen visual */
+#v-balance tbody {
+    display: block;
+    width: 100%;
 }
 
-/* Efecto visual cuando el usuario pasa el mouse por encima */
-.dashboard-table-container::-webkit-scrollbar-thumb:hover {
-    background: #eab308; /* Un tono de amarillo un poco más oscuro */
+#v-balance tr.responsive-row {
+    display: block;
+    width: 100% !important; /* La tarjeta ahora cubre todo el ancho */
+    background: var(--card-dark);
+    margin-bottom: 20px; /* Más espacio entre tarjetas para que no se peguen */
+    border: 1px solid var(--border) !important;
+    border-radius: 16px;
+    padding: 15px; /* Más aire interno */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+#v-balance td {
+    display: flex;
+    justify-content: space-between; /* Empuja el título a la izquierda y el dato a la derecha */
+    align-items: center;
+    padding: 12px 0 !important; /* Espaciado vertical entre líneas */
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    width: 100%;
+}
+
+#v-balance td:last-child { border-bottom: none; }
+
+/* Títulos amarillos (Labels) */
+#v-balance td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--accent-yellow);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    text-align: left;
+    flex: 1; /* Toma su espacio sin empujar demasiado */
+}
+
+/* Datos (Valores blancos/colores) */
+#v-balance td > div, 
+#v-balance td > span,
+#v-balance td input {
+    font-size: 1rem !important;
+    text-align: right;
+    flex: 2; /* Le damos más prioridad al dato para que no se corte */
+    display: flex;
+    justify-content: flex-end;
 }
 /* =========================================
    COMPONENTES BENTO (TARJETAS)
@@ -235,15 +272,15 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     #admin-panel { flex-direction: column; height: auto; }
     
     .main-content { 
-        padding: 20px 15px !important; 
+        padding: 15px !important; /* Menos espacio en los bordes para ganar pantalla */
         height: auto; 
         overflow: visible; 
     }
 
-    /* 2. Proporciones de Títulos (El cambio que pediste) */
+    /* 2. Títulos Proporcionales */
     .main-content h2 { 
         font-size: 1.5rem !important; 
-        margin-bottom: 15px; 
+        margin-bottom: 20px; 
     }
 
     /* 3. Sidebar transformado en Menu Superior */
@@ -252,7 +289,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
         flex-wrap: wrap; 
         width: 100%; 
         max-width: 100%; 
-        min-width: 100%;
         padding: 0; 
         border-right: none; 
         border-bottom: 1px solid var(--border);
@@ -261,75 +297,76 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
     
     .nav-item { 
         flex-direction: column; 
-        padding: 10px 5px; 
-        font-size: 0.6rem; 
+        padding: 12px 5px; 
+        font-size: 0.65rem; 
         flex: 1 1 30%; 
         text-align: center; 
         border-right: 1px solid var(--border);
         border-bottom: 1px solid var(--border);
     }
     
-    .nav-item.active { 
-        border-right: none;
-        border-bottom: 3px solid var(--accent-yellow); 
-    }
+    .nav-item.active { border-bottom: 3px solid var(--accent-yellow); }
 
-    /* 4. TABLA TRANSFORMADA A TARJETAS (Elimina el scroll horizontal) */
+    /* 4. TABLA TRANSFORMADA A TARJETAS (Distribución Total) */
     .dashboard-table-container { 
-        overflow-x: hidden !important; 
+        overflow-x: hidden !important;
+        width: 100% !important; 
     }
 
     .dashboard-table-container table { 
-        min-width: unset !important; /* MATA EL SCROLL AQUÍ */
-        width: 100% !important;
+        min-width: unset !important; 
+        width: 100% !important; /* Fuerza a la tabla a expandirse */
         display: block;
     }
 
-    #v-balance thead { display: none; } /* Escondemos cabecera */
+    #v-balance thead { display: none; }
 
     #v-balance tr.responsive-row {
         display: block;
+        width: 100% !important; /* La tarjeta ahora cubre todo el ancho del recuadro */
         background: var(--card-dark);
-        margin-bottom: 15px;
+        margin-bottom: 20px;
         border: 1px solid var(--border) !important;
-        border-radius: 16px;
-        padding: 12px;
+        border-radius: 20px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
     #v-balance td {
-        display: flex;
-        justify-content: space-between;
+        display: flex !important; /* Activamos Flexbox */
+        justify-content: space-between !important; /* ESTO es lo que separa el título del dato */
         align-items: center;
-        padding: 10px 5px !important;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
+        width: 100% !important; /* Obliga a la línea a ser ancha */
+        padding: 12px 0 !important; 
+        border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
     #v-balance td:last-child { border-bottom: none; }
 
-    /* Títulos laterales de la tarjeta */
+    /* Títulos amarillos (Headers laterales) */
     #v-balance td::before {
         content: attr(data-label);
         font-weight: 700;
         color: var(--accent-yellow);
         text-transform: uppercase;
-        font-size: 0.65rem;
+        font-size: 0.7rem;
         text-align: left;
     }
 
-    /* Ajuste de los datos blancos para que no se vean gigantes */
+    /* Datos (Lo que era el contenido de la celda) */
     #v-balance td > div, 
-    #v-balance td > span {
-        font-size: 0.9rem !important;
-        max-width: 60%;
-        text-align: right;
+    #v-balance td > span,
+    #v-balance td input {
+        font-size: 0.95rem !important;
+        text-align: right !important;
+        color: var(--white);
+        margin: 0 !important;
     }
 
     /* 5. Otros elementos */
     .bento-grid-stats { grid-template-columns: 1fr; }
     .span-2 { grid-column: span 1; }
-    .admin-sarlab-credit { display: none; }
 }
-
 /* =========================================
    IMPRESIÓN TICKET
    ========================================= */
