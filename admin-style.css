@@ -266,23 +266,73 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 /* =========================================
    RESPONSIVE 
    ========================================= */
+/* =========================================
+   ESTILO MOBILE: ICON RAIL 
+   ========================================= */
 @media (max-width: 768px) {
-    /* 1. Ajuste General del Layout */
+    /* Base: Evita que el fondo se mueva */
     body { overflow: hidden; height: 100vh; }
-    #admin-panel { flex-direction: row; }
+    #admin-panel { display: flex !important; flex-direction: row; height: 100vh; }
+/* 1. Corregir la cabecera de Insumos para que no desborde */
+    #v-inventario > div:first-child {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 15px !important;
+        margin-bottom: 20px !important;
+    }
 
-    /* 2. Barra Lateral Minimalista (Glassmorphism) */
+    /* 2. Reducir el título principal de la sección */
+    #v-inventario h2 {
+        font-size: 1.3rem !important; /* Tamaño más manejable */
+        line-height: 1.2;
+        width: 100%;
+    }
+
+    /* 3. Reorganizar los botones (Registrar Compra, Cuadre, Merma) */
+    #v-inventario div[style*="display: flex; gap: 10px;"] {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr); /* Dos columnas de botones */
+        gap: 8px !important;
+        width: 100%;
+    }
+
+    /* 4. Ajustar el tamaño de los botones de cabecera */
+    #v-inventario .btn-action {
+        padding: 12px 8px !important;
+        font-size: 0.7rem !important;
+        height: auto !important;
+        text-align: center;
+        justify-content: center;
+    }
+
+    /* El tercer botón (Merma) ocupará el ancho completo de la cuadrícula si es necesario */
+    #v-inventario .btn-action:last-child {
+        grid-column: span 2;
+    }
+
+    /* 5. Ajustar el formulario de "Configuración de Ítem" */
+    .form-container {
+        padding: 20px !important;
+        margin-top: 10px;
+    }
+
+    .form-container h3 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Sidebar: Barra lateral de cristal */
     .sidebar {
         width: 70px !important;
         min-width: 70px !important;
         max-width: 70px !important;
         height: 100vh;
-        background: rgba(22, 24, 29, 0.7) !important; /* Transparencia sutil */
-        backdrop-filter: blur(15px); /* Desenfoque de cristal */
+        background: rgba(15, 17, 21, 0.85) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         position: fixed;
         left: 0;
         top: 0;
-        padding: 20px 0;
+        padding: 25px 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -290,69 +340,69 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
         z-index: 1000;
     }
 
-    /* Ocultamos textos y el logo grande */
-    .sidebar h2, .nav-item span { display: none; }
-    
-    /* Logo pequeño para móvil */
+    /* Ocultar elementos de texto */
+    .sidebar h2, .nav-item span { display: none !important; }
+
+    /* Logo Minimalista en móvil */
     .sidebar-logo {
+        display: block !important;
         font-size: 1.2rem;
         font-weight: 800;
         color: var(--accent-yellow);
-        margin-bottom: 30px;
+        margin-bottom: 35px;
     }
 
-    /* 3. Botones de Navegación (Iconos) */
+    /* Items de Navegación */
     .nav-item {
-        width: 45px;
-        height: 45px;
+        width: 48px;
+        height: 48px;
         padding: 0;
         margin-bottom: 12px;
         display: flex;
         justify-content: center;
         align-items: center;
-        border-radius: 12px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 14px;
+        transition: all 0.3s ease;
         border: none !important;
+        color: var(--text-muted);
     }
 
-    /* Efecto activo: Círculo/Cuadrado resaltado */
+    /* Estado Activo */
     .nav-item.active {
         background: var(--accent-yellow) !important;
-        color: #000 !important;
-        box-shadow: 0 4px 15px rgba(255, 204, 0, 0.2);
+        color: #0f1115 !important;
+        box-shadow: 0 8px 20px rgba(255, 204, 0, 0.15);
     }
 
-    .nav-item:not(.active):hover {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    /* 4. Contenido Principal */
+    /* Contenido Principal: Ajustado a la derecha */
     .main-content {
-        margin-left: 70px; /* Espacio para la barra lateral fija */
+        margin-left: 70px;
         width: calc(100% - 70px);
         padding: 20px !important;
         height: 100vh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-    /* 5. Footer de la barra */
+    /* Footer: Logout y Créditos */
     .sidebar-footer {
         margin-top: auto;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 15px;
-        padding-bottom: 20px;
+        gap: 20px;
+        padding-bottom: 25px;
     }
 
     .admin-sarlab-credit {
         display: block !important;
-        font-size: 0.5rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        opacity: 0.3;
-        writing-mode: vertical-rl; /* Firma elegante en vertical */
+        font-size: 0.55rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        opacity: 0.25;
+        writing-mode: vertical-rl;
         transform: rotate(180deg);
+        color: var(--white);
     }
 }
 /* =========================================
