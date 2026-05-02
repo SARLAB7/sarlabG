@@ -278,6 +278,34 @@
         </table>
     </div>
 </section>
+            <!-- SECCIÓN BALANCE (CUADRE DIARIO) -->
+<section id="v-balance" class="view-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Cuadre de Inventario</h2>
+        <div style="display: flex; gap: 10px;">
+            <select id="filtro-balance" onchange="abrirSeccionBalance()" style="width: auto; margin-bottom: 0;">
+                <option value="hoy">Hoy</option>
+                <option value="ayer">Ayer</option>
+                <option value="semana">Últimos 7 días</option>
+                <option value="todo">Todo el historial</option>
+            </select>
+            <button onclick="volverInventario()" class="btn-action btn-outline">Volver</button>
+        </div>
+    </div>
+    <div class="dashboard-table-container" style="background: var(--card-dark); border: 1px solid var(--border); border-radius: 16px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="color: var(--accent-yellow); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 16px;">Insumo</th>
+                    <th style="padding: 16px; text-align: center;">Entradas (+)</th>
+                    <th style="padding: 16px; text-align: center;">Salidas (-)</th>
+                    <th style="padding: 16px; text-align: right;">Stock Final</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-balance-seccion"></tbody>
+        </table>
+    </div>
+</section>
         </main>
     </div>
 
