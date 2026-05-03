@@ -2,31 +2,32 @@
    VARIABLES GLOBALES REFINADAS
    ========================================= */
 :root {
-    /* MODO CLARO  */
     --bg-main: #f0f2f5;
     --bg-card: #ffffff;
     --bg-sidebar: #ffffff; 
     --text-main: #1c1e21;
-    --text-muted: #65676b;
-    --border: rgba(0, 0, 0, 0.1);
-    --modal-glass: rgba(255, 255, 255, 0.9);
-    --input-bg: #f0f2f5;
+    --text-muted: #8e8e93; /* Gris tenue como en tu imagen */
+    --border: rgba(0, 0, 0, 0.08);
+    --input-bg: #f5f5f7;
+    --accent-yellow: #ffcc00;
 }
 
 [data-theme="dark"] {
-    /* MODO OSCURO */
-    --bg-main: #18191a;
-    --bg-card: #242526;
-    --bg-sidebar: #1c1d1e;
-    --text-main: #e4e6eb;
-    --text-muted: #b0b3b8;
-    --border: rgba(255, 255, 255, 0.15); /* Bordes más visibles */
-    --modal-glass: rgba(36, 37, 38, 0.95);
-    --input-bg: #3a3b3c;
+    --bg-main: #0a0a0a;
+    --bg-card: #1c1c1e;
+    --bg-sidebar: #121212;
+    --text-main: #ffffff;
+    --text-muted: #48484a; /* Iconos apagados en modo oscuro */
+    --border: rgba(255, 255, 255, 0.1);
+    --input-bg: #2c2c2e;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
+body { 
+    background: var(--bg-main) !important; 
+    color: var(--text-main);
+    transition: 0.3s;
+}
 body, #admin-panel, .main-content {
     background: var(--bg-main) !important;
     color: var(--text-main);
@@ -259,8 +260,17 @@ select option {
 }
 /* Botones */
 .btn-primary { background: var(--white); color: #000; }
-.btn-yellow { background: var(--accent-yellow); color: #000; }
-.btn-yellow:hover { background: #e6b800; transform: translateY(-2px); }
+.btn-yellow {
+    background: var(--accent-yellow) !important;
+    color: #000 !important; /* Texto siempre negro para contraste */
+    font-weight: 700;
+    transition: 0.2s;
+}
+
+.btn-yellow:hover {
+    filter: brightness(1.1);
+    transform: scale(1.01);
+}
 .btn-outline, .btn-action {
     background: var(--bg-card);
     color: var(--text-muted);
@@ -455,10 +465,20 @@ select option {
 
     /* 5. Ajustar el formulario de "Configuración de Ítem" */
     .form-container {
-        padding: 20px !important;
-        margin-top: 10px;
-    }
-
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    padding: 24px !important;
+    border-radius: 20px;
+    width: 100%;
+}
+   .form-container input, .form-container select {
+    width: 100% !important;
+    max-width: 100%;
+    margin-bottom: 8px;
+    padding: 12px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box; /* Crucial para que el padding no sume al ancho */
+}
     .form-container h3 {
         font-size: 1.1rem !important;
     }
