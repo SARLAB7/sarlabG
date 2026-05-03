@@ -143,6 +143,19 @@ window.actualizarMétricas = function() {
     const rDiv = document.getElementById('rankings-rechazados');
     if(rDiv) rDiv.innerHTML = `<div style="padding:10px; border-radius:8px; border:1px solid var(--border);">Total Rechazos: <strong>${rechazadosContados}</strong></div>`;
 };
+window.toggleTheme = () => {
+    const body = document.documentElement;
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    body.setAttribute('data-theme', newTheme);
+    document.getElementById('theme-icon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', newTheme); // Para que recuerde tu elección
+};
+
+// Cargar preferencia al iniciar
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
 
 window.renderizarPlanoMesas = (ps) => {
     const g = document.getElementById('grid-mesas'); if(!g) return;
