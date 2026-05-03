@@ -1,29 +1,54 @@
 /* =========================================
-   VARIABLES Y BASE
+   SISTEMA DE TEMAS (TENUES Y MODERNOS)
    ========================================= */
-:root { 
-    --bg-dark: #0f1115; 
-    --card-dark: #1c1d21;
-    --sidebar: #16181d;
+:root {
+    /* Tema Claro (Inspirado en Imagen 1 y 2) */
+    --bg-main: #f0f2f5;
+    --bg-card: #ffffff;
+    --bg-sidebar: #e4e6eb;
+    --text-main: #1c1e21;
+    --text-muted: #65676b;
+    --border: rgba(0, 0, 0, 0.05);
+    --shadow: 0 8px 30px rgba(0,0,0,0.05);
+    
+    /* El único color vibrante */
     --accent-yellow: #ffcc00; 
-    --white: #ffffff; 
-    --success: #22c55e; 
-    --danger: #ef4444; 
-    --text-white: #f8fafc;
-    --text-muted: #94a3b8; 
+    --accent-active: #ffcc00;
+}
+
+[data-theme="dark"] {
+    /* Tema Oscuro Tenue (Inspirado en Imagen 3) */
+    --bg-main: #18191a;
+    --bg-card: #242526;
+    --bg-sidebar: #1c1d1e;
+    --text-main: #e4e6eb;
+    --text-muted: #b0b3b8;
     --border: rgba(255, 255, 255, 0.05);
+    --shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
 
-/* =========================================
-   LOGIN
-   ========================================= */
-.login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-dark); }
-.login-card { background: var(--card-dark); padding: 40px; border-radius: 24px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.login-card h2 { margin-bottom: 5px; font-weight: 700; color: var(--text-white); }
-.login-card p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem; }
+/* Login  */
+#login-screen {
+    background: var(--bg-main) !important;
+}
+
+#login-screen h2 {
+    color: var(--text-main) !important;
+    font-weight: 700;
+}
+
+#login-btn {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-radius: 50px !important; /* Muy redondeado como en la imagen */
+    box-shadow: 10px 10px 20px #bebebe, -10px -10px 20px #ffffff; /* Efecto Neumórfico */
+    border: none;
+    padding: 15px 30px;
+    font-weight: 600;
+}
 
 /* =========================================
    LAYOUT PRINCIPAL (AQUÍ ESTÁ LA MAGIA)
