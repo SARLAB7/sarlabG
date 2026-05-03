@@ -248,9 +248,9 @@ body, #admin-panel, .main-content {
 /* Formularios e Inputs */
 /* FIX: TEXTO EN INPUTS Y SELECTS (Para que no sean negros) */
 input, select, textarea {
-    background: var(--input-bg) !important;
-    color: var(--text-main) !important;
-    border: 1px solid var(--border) !important;
+    width: 100% !important;
+    box-sizing: border-box !important; 
+    max-width: 100%;
 }
 input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); }
 /* Estilo para las opciones del desplegable */
@@ -335,6 +335,23 @@ select option {
 /* Modales */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background: var(--card-dark); padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border); }
+
+
+/* =========================================
+   POWER SWITCH ICON (ON/OFF)
+   ========================================= */
+#power-icon {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-muted); /* Apagado por defecto */
+}
+
+/* Cuando el sistema está en MODO CLARO (Sistema "Encendido") */
+[data-theme="light"] #power-icon {
+    color: var(--accent-yellow) !important;
+    filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.6));
+    transform: scale(1.1);
+}
+
 /* =========================================
    FIX: LOGO ESCRITORIO
    ========================================= */
@@ -358,28 +375,25 @@ select option {
 
 @media (max-width: 768px) {
     .sidebar {
-        background: var(--bg-sidebar) !important; /* Ahora sí cambia con el tema */
+        background: var(--bg-sidebar) !important; /* Ahora sí cambia de color */
         border-right: 1px solid var(--border);
     }
 
     .nav-item {
-        color: var(--text-muted) !important; /* Color gris tenue de la imagen */
-        opacity: 0.6;
+        color: var(--text-muted) !important; /* Gris tenue como en la última imagen */
+        opacity: 0.5;
     }
 
+    /* Icono seleccionado: BLANCO sobre AMARILLO */
     .nav-item.active {
         background: var(--accent-yellow) !important;
-        color: #ffffff !important; /* Icono seleccionado blanco como pediste */
+        color: #ffffff !important; /* Texto/Icono blanco */
         opacity: 1;
-        box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
     }
     
-    /* Evitar que el texto se salga de los cuadros en métricas */
-    .stat-card {
-        padding: 15px !important;
-    }
-    .big-number-small {
-        font-size: 1.4rem !important;
+    .nav-item.active svg {
+        stroke: #ffffff !important; /* Asegura que el icono sea blanco */
     }
 }
 /* =========================================
@@ -491,6 +505,11 @@ select option {
     }
 
     /* 5. Ajustar el formulario de "Configuración de Ítem" */
+   .form-container, .stat-card {
+    overflow: hidden; /* Evita que las letras se salgan */
+    display: flex;
+    flex-direction: column;
+}
     .form-container {
     background: var(--bg-card) !important;
     border: 1px solid var(--border) !important;
