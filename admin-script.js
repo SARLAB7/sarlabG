@@ -150,12 +150,13 @@ window.toggleTheme = () => {
     
     body.setAttribute('data-theme', newTheme);
     document.getElementById('theme-icon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('theme', newTheme); // Para que recuerde tu elección
+    localStorage.setItem('iku-admin-theme', newTheme);
 };
 
-// Cargar preferencia al iniciar
-const savedTheme = localStorage.getItem('theme') || 'light';
+// Cargar tema guardado al iniciar
+const savedTheme = localStorage.getItem('iku-admin-theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
+if(savedTheme === 'dark') document.getElementById('theme-icon').innerText = '☀️';
 
 window.renderizarPlanoMesas = (ps) => {
     const g = document.getElementById('grid-mesas'); if(!g) return;
