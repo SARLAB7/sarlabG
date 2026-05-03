@@ -144,13 +144,15 @@ window.actualizarMétricas = function() {
     if(rDiv) rDiv.innerHTML = `<div style="padding:10px; border-radius:8px; border:1px solid var(--border);">Total Rechazos: <strong>${rechazadosContados}</strong></div>`;
 };
 window.toggleTheme = () => {
-    const body = document.documentElement;
-    const currentTheme = body.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const target = current === 'dark' ? 'light' : 'dark';
     
-    body.setAttribute('data-theme', newTheme);
-    document.getElementById('theme-icon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('iku-admin-theme', newTheme);
+    html.setAttribute('data-theme', target);
+    localStorage.setItem('iku-admin-theme', target);
+    
+    // Feedback visual opcional en consola
+    console.log(`Sistema IKU: ${target === 'light' ? 'Encendido (Claro)' : 'Apagado (Oscuro)'}`);
 };
 
 // Cargar tema guardado al iniciar
