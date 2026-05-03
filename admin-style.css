@@ -247,19 +247,36 @@ input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--bo
 input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); }
 
 /* Botones */
-.btn-action { padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; width: 100%; }
 .btn-primary { background: var(--white); color: #000; }
 .btn-yellow { background: var(--accent-yellow); color: #000; }
 .btn-yellow:hover { background: #e6b800; transform: translateY(-2px); }
-.btn-outline { border: 1px solid var(--border); background: transparent; color: var(--text-muted); }
-
+.btn-outline, .btn-action {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 12px;}
+.btn-theme {
+    width: 80%;
+    margin: 10px auto;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    background: var(--bg-card);
+    box-shadow: var(--nm-shadow);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
 /* =========================================
    PEDIDOS Y MESAS
    ========================================= */
-.pedido-card { background: var(--sidebar); padding: 20px; border-radius: 16px; margin-bottom: 15px; border-left: 4px solid var(--border); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.pedido-card.pendiente { border-left-color: var(--danger); }
-.pedido-card.preparando { border-left-color: var(--accent-yellow); }
-.pedido-card.listo { border-left-color: var(--success); opacity: 0.7; }
+.pedido-card.pendiente, 
+.pedido-card.preparando, 
+.pedido-card.listo {
+    border-left: 6px solid var(--bg-sidebar) !important; /* Color neutro */
+}
 
 .acciones-pedido { margin-top: 15px; display: flex; gap: 8px; flex-direction: column; }
 .btn-estado { padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -475,10 +492,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 
     /* Estado Activo */
     .nav-item.active {
-        background: var(--accent-yellow) !important;
-        color: #0f1115 !important;
-        box-shadow: 0 8px 20px rgba(255, 204, 0, 0.15);
-    }
+    background: var(--accent-yellow) !important;
+    color: #000 !important;
+    box-shadow: 0 4px 15px rgba(255, 204, 0, 0.3);
+}
 
     /* Contenido Principal: Ajustado a la derecha */
     .main-content {
