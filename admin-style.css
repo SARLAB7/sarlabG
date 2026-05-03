@@ -355,6 +355,33 @@ select option {
 /* =========================================
    RESPONSIVE 
    ========================================= */
+
+@media (max-width: 768px) {
+    .sidebar {
+        background: var(--bg-sidebar) !important; /* Ahora sí cambia con el tema */
+        border-right: 1px solid var(--border);
+    }
+
+    .nav-item {
+        color: var(--text-muted) !important; /* Color gris tenue de la imagen */
+        opacity: 0.6;
+    }
+
+    .nav-item.active {
+        background: var(--accent-yellow) !important;
+        color: #ffffff !important; /* Icono seleccionado blanco como pediste */
+        opacity: 1;
+        box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+    }
+    
+    /* Evitar que el texto se salga de los cuadros en métricas */
+    .stat-card {
+        padding: 15px !important;
+    }
+    .big-number-small {
+        font-size: 1.4rem !important;
+    }
+}
 /* =========================================
    ESTILO MOBILE: ICON RAIL 
    ========================================= */
