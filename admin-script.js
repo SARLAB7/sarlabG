@@ -158,7 +158,7 @@ window.toggleTheme = () => {
 // Cargar tema guardado al iniciar
 const savedTheme = localStorage.getItem('iku-admin-theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-if(savedTheme === 'dark') document.getElementById('theme-icon').innerText = '☀️';
+if(savedTheme === 'dark') document.getElementById('theme-icon').innerText = '';
 
 window.renderizarPlanoMesas = (ps) => {
     const g = document.getElementById('grid-mesas'); if(!g) return;
