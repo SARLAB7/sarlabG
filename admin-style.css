@@ -1,35 +1,37 @@
 /* =========================================
-   SISTEMA DE TEMAS (TENUES Y MODERNOS)
+   VARIABLES GLOBALES REFINADAS
    ========================================= */
 :root {
-    /* Tema Claro (Inspirado en Imagen 1 y 2) */
+    /* MODO CLARO  */
     --bg-main: #f0f2f5;
     --bg-card: #ffffff;
-    --bg-sidebar: #e4e6eb;
+    --bg-sidebar: #ffffff; 
     --text-main: #1c1e21;
     --text-muted: #65676b;
-    --border: rgba(0, 0, 0, 0.05);
-    --shadow: 0 8px 30px rgba(0,0,0,0.05);
-    
-    /* El único color vibrante */
-    --accent-yellow: #ffcc00; 
-    --accent-active: #ffcc00;
+    --border: rgba(0, 0, 0, 0.1);
+    --modal-glass: rgba(255, 255, 255, 0.9);
+    --input-bg: #f0f2f5;
 }
 
 [data-theme="dark"] {
-    /* Tema Oscuro Tenue (Inspirado en Imagen 3) */
+    /* MODO OSCURO */
     --bg-main: #18191a;
     --bg-card: #242526;
     --bg-sidebar: #1c1d1e;
-    --text-main: ##18191a;
+    --text-main: #e4e6eb;
     --text-muted: #b0b3b8;
-    --border: rgba(255, 255, 255, 0.05);
-    --shadow: 0 8px 30px rgba(0,0,0,0.3);
+    --border: rgba(255, 255, 255, 0.15); /* Bordes más visibles */
+    --modal-glass: rgba(36, 37, 38, 0.95);
+    --input-bg: #3a3b3c;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; height: 100vh; }
-
+body, #admin-panel, .main-content {
+    background: var(--bg-main) !important;
+    color: var(--text-main);
+    transition: background 0.3s ease, color 0.3s ease;
+}
 /* Login  */
 #login-screen {
     background: var(--bg-main) !important;
@@ -243,9 +245,18 @@ body { background: var(--bg-dark); color: var(--text-white); overflow: hidden; h
 .payment-item { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
 
 /* Formularios e Inputs */
-input, select, textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--sidebar); color: var(--white); font-family: inherit; margin-bottom: 12px; outline: none; transition: 0.3s; }
+/* FIX: TEXTO EN INPUTS Y SELECTS (Para que no sean negros) */
+input, select, textarea {
+    background: var(--input-bg) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border) !important;
+}
 input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); }
-
+/* Estilo para las opciones del desplegable */
+select option {
+    background: var(--bg-card);
+    color: var(--text-main);
+}
 /* Botones */
 .btn-primary { background: var(--white); color: #000; }
 .btn-yellow { background: var(--accent-yellow); color: #000; }
@@ -301,7 +312,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 .mesa-libre { border-color: rgba(34, 197, 94, 0.3); }
 .mesa-ocupada { border-color: var(--accent-yellow); background: rgba(255, 204, 0, 0.05); cursor: pointer; }
 .mesa-ocupada:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255, 204, 0, 0.1); }
-
+/* =========================================
+   MODALES (ESTILO ESPEJO REFINADO)
+   ========================================= */
+#modal-merma > div, #modal-compra > div, #delete-modal > div {
+    background: var(--modal-glass) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border) !important; /* Bordes reforzados */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
 /* Modales */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background: var(--card-dark); padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid var(--border); }
@@ -542,17 +562,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
    ========================================= */
 
 /* 1. Tarjetas principales: Fondo oscuro, BORDES y PADDING para que respiren */
-.admin-panel-card,
-.stat-card {
-    background-color: var(--card-dark) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
-    padding: 24px !important; /* <- Esto soluciona lo apilonado */
-    color: var(--white) !important;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+/* FIX: TARJETAS DE MÉTRICAS (Texto Perdidas/Rechazos) */
+.admin-panel-card, .stat-card {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
 }
 
 /* 2. Textos de las tarjetas */
@@ -569,7 +582,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent-yellow); 
 }
 
 /* 3. Forzar al modo oscuro las sub-tarjetas generadas por el JavaScript (Los cuadros blancos internos) */
-#rankings-rechazados div,
+#rankings-rechazados {
+    background: var(--input-bg) !important;
+    color: var(--text-main) !important;
+    border-radius: 12px;
+}
 #rankings-categoria div {
     background-color: #16181d !important; /* Fondo oscuro para los recuadros internos */
     color: var(--white) !important;
